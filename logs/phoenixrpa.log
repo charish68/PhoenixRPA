@@ -1,0 +1,6 @@
+2026-08-07 18:56:35.562 | INFO     | phoenixrpa.main:<module>:4 - Starting PhoenixRPA Backend
+2026-08-07 18:56:53.235 | INFO     | phoenixrpa.main:health:23 - Health endpoint called
+2026-08-07 18:59:45.225 | INFO     | phoenixrpa.main:<module>:4 - Starting PhoenixRPA Backend
+2026-08-07 19:00:06.577 | INFO     | phoenixrpa.main:<module>:6 - Starting PhoenixRPA Backend
+2026-08-07 19:00:55.877 | INFO     | phoenixrpa.main:<module>:6 - Starting PhoenixRPA Backend
+2026-08-07 19:01:04.773 | INFO     | phoenixrpa.main:<module>:6 - Starting PhoenixRPA Backend
