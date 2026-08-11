@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+
+    <style>
+        body {
+            width: 220px;
+            padding: 15px;
+            font-family: Arial, sans-serif;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        #status {
+            margin-top: 15px;
+            text-align: center;
+            color: green;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>PhoenixRPA</h2>
+
+    <button id="start">
+        ▶ Start Recording
+    </button>
+
+    <button id="stop">
+        ■ Stop Recording
+    </button>
+
+    <div id="status">
+        Idle
+    </div>
+
+    <script src="popup.js"></script>
+
+</body>
+</html>

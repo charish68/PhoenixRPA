@@ -10,9 +10,14 @@ authors = [
 ]
 
 dependencies = [
+    "alembic>=1.19.0",
+    "apscheduler>=3.11.3",
     "fastapi>=0.141.1",
     "loguru>=0.7.3",
+    "playwright>=1.62.0",
+    "psycopg2-binary>=2.9.12",
     "pydantic-settings>=2.15.0",
+    "sqlalchemy>=2.0.51",
     "uvicorn>=0.52.1",
 ]
 
@@ -22,3 +27,10 @@ build-backend = "uv_build"
 
 [tool.uv]
 package = true
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.10.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]

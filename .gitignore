@@ -1,10 +1,34 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+﻿# Virtual environments
+.venv/
 
-# Virtual environments
-.venv
+# Python
+__pycache__/
+*.py[cod]
+
+# Pytest
+.pytest_cache/
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# PhoenixRPA runtime
+.phoenixrpa_browser_profile/
+recorded/
+
+# Temporary/debug artifacts
+*_test.py
+*.png
+*.bak
+recorded_workflow.json
+
+# Temporary/debug artifacts
+*.bak
+recorded_workflow.json
