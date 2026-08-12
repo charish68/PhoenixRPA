@@ -2,14 +2,24 @@
 
 from phoenixrpa.agents.factory import create_llm_provider
 from phoenixrpa.agents.mock_provider import MockLLMProvider
+from phoenixrpa.agents.openai_compatible_provider import (
+    OpenAICompatibleProvider,
+)
 from phoenixrpa.core.config import Settings
 
 
-def make_settings(provider: str) -> Settings:
+def make_settings(
+    provider: str,
+    api_key: str | None = None,
+) -> Settings:
     return Settings(
         database_url="postgresql://test",
         phoenixrpa_extension_path=".",
         llm_provider=provider,
+        llm_api_key=api_key,
+        llm_model="test-model",
+        llm_base_url="https://example.com/v1",
+        llm_timeout=10.0,
     )
 
 
@@ -24,11 +34,39 @@ def test_factory_creates_mock_provider():
     )
 
 
+def test_factory_creates_openai_provider():
+    provider = create_llm_provider(
+        make_settings(
+            "openai",
+            api_key="test-key",
+        )
+    )
+
+    assert isinstance(
+        provider,
+        OpenAICompatibleProvider,
+    )
+
+    assert provider.api_key == "test-key"
+    assert provider.model == "test-model"
+    assert provider.base_url == "https://example.com/v1"
+    assert provider.timeout == 10.0
+
+
+def test_factory_rejects_openai_without_api_key():
+    with pytest.raises(
+        ValueError,
+        match="LLM_API_KEY is required",
+    ):
+        create_llm_provider(
+            make_settings("openai")
+        )
+
+
 @pytest.mark.parametrize(
     "provider_name",
     [
         "unknown",
-        "openai",
         "invalid",
     ],
 )
