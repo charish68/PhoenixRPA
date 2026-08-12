@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     llm_provider: str = "mock"
     llm_api_key: str | None = None
     llm_model: str = "default"
+    llm_base_url: str = "https://api.openai.com/v1"
     llm_timeout: float = 30.0
 
     model_config = SettingsConfigDict(
