@@ -18,6 +18,8 @@ from phoenixrpa.core.logger import logger
 from phoenixrpa.healing.service import HealingService
 from phoenixrpa.recorder.service import RecorderService
 from phoenixrpa.core.config import settings
+from phoenixrpa.agents.factory import create_llm_provider
+from phoenixrpa.agents.healing_agent import AIHealingAgent
 
 
 class BrowserManager:
@@ -254,9 +256,17 @@ class BrowserManager:
         # --------------------------------------------------
         # Healing service
         # --------------------------------------------------
+        llm_provider = create_llm_provider(
+            settings
+        )
+
+        ai_agent = AIHealingAgent(
+            provider=llm_provider
+        )
 
         self.healer = HealingService(
             self.page,
+            ai_agent=ai_agent,
         )
 
         # --------------------------------------------------
