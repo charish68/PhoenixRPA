@@ -16,6 +16,12 @@ class Settings(BaseSettings):
 
     phoenixrpa_extension_path: str
 
+    # LLM configuration
+    llm_provider: str = "mock"
+    llm_api_key: str | None = None
+    llm_model: str = "default"
+    llm_timeout: float = 30.0
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False,
