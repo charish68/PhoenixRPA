@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 
@@ -22,7 +22,7 @@ class ExecutionRepository:
         run = ExecutionRun(
             job_id=job_id,
             status="RUNNING",
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.utcnow(),
         )
 
         self.db.add(run)
@@ -36,7 +36,7 @@ class ExecutionRepository:
         run: ExecutionRun,
     ):
         run.status = "SUCCESS"
-        run.finished_at = datetime.now(timezone.utc)
+        run.finished_at = datetime.utcnow()
 
         run.duration_ms = int(
             (
@@ -56,7 +56,7 @@ class ExecutionRepository:
     ):
         run.status = "FAILED"
         run.error_message = error
-        run.finished_at = datetime.now(timezone.utc)
+        run.finished_at = datetime.utcnow()
 
         run.duration_ms = int(
             (
@@ -88,7 +88,7 @@ class ExecutionRepository:
             action=action,
             branch_path=branch_path,
             status="RUNNING",
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.utcnow(),
         )
 
         self.db.add(log)
@@ -102,7 +102,7 @@ class ExecutionRepository:
         log: ExecutionLog,
     ):
         log.status = "SUCCESS"
-        log.finished_at = datetime.now(timezone.utc)
+        log.finished_at = datetime.utcnow()
 
         log.duration_ms = int(
             (
@@ -122,7 +122,7 @@ class ExecutionRepository:
     ):
         log.status = "FAILED"
         log.error_message = error
-        log.finished_at = datetime.now(timezone.utc)
+        log.finished_at = datetime.utcnow()
 
         log.duration_ms = int(
             (
