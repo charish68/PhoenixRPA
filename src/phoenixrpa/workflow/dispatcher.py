@@ -28,10 +28,18 @@ class WorkflowDispatcher:
     ):
         """
         Execute a browser action with automatic selector healing.
+
+        Returns:
+            None when the original selector succeeds.
+            A healing metadata dictionary when a selector is healed.
         """
 
+        original_selector = step.selector
+
         try:
-            return await action(step.selector)
+            await action(step.selector)
+
+            return None
 
         except Exception:
             logger.warning(
@@ -67,7 +75,13 @@ class WorkflowDispatcher:
 
             step.selector = healed
 
-            return await action(healed)
+            await action(healed)
+
+            return {
+                "status": "HEALED",
+                "original_selector": original_selector,
+                "healed_selector": healed,
+            }
 
     async def dispatch(
         self,
@@ -88,13 +102,15 @@ class WorkflowDispatcher:
                 timeout=step.timeout,
             )
 
+            return None
+
         elif action == "click":
             if not step.selector:
                 raise ValueError(
                     "click requires 'selector'"
                 )
 
-            await self._execute_with_healing(
+            return await self._execute_with_healing(
                 step,
                 lambda selector: self.browser.actions.click(
                     selector,
@@ -108,7 +124,7 @@ class WorkflowDispatcher:
                     "fill requires 'selector' and 'value'"
                 )
 
-            await self._execute_with_healing(
+            return await self._execute_with_healing(
                 step,
                 lambda selector: self.browser.actions.fill(
                     selector,
@@ -123,7 +139,7 @@ class WorkflowDispatcher:
                     "press requires 'selector' and 'value'"
                 )
 
-            await self._execute_with_healing(
+            return await self._execute_with_healing(
                 step,
                 lambda selector: self.browser.actions.press(
                     selector,
@@ -138,7 +154,7 @@ class WorkflowDispatcher:
                     "hover requires 'selector'"
                 )
 
-            await self._execute_with_healing(
+            return await self._execute_with_healing(
                 step,
                 lambda selector: self.browser.actions.hover(
                     selector,
@@ -152,7 +168,7 @@ class WorkflowDispatcher:
                     "wait_element requires 'selector'"
                 )
 
-            await self._execute_with_healing(
+            return await self._execute_with_healing(
                 step,
                 lambda selector: self.browser.waits.element(
                     selector,
@@ -171,6 +187,8 @@ class WorkflowDispatcher:
                 timeout=step.timeout,
             )
 
+            return None
+
         elif action == "extract_text":
             if not step.selector:
                 raise ValueError(
@@ -184,15 +202,28 @@ class WorkflowDispatcher:
                 ),
             )
 
+            # _execute_with_healing returns healing metadata,
+            # so perform extraction separately when needed.
+            if isinstance(text, dict):
+                healed_info = text
+                extracted_text = await self.browser.extractor.text(
+                    step.selector,
+                )
+            else:
+                healed_info = None
+                extracted_text = text
+
             logger.info(
-                f"Extracted Text: {text}"
+                f"Extracted Text: {extracted_text}"
             )
 
             if step.value:
                 self.variables.set(
                     step.value,
-                    text,
+                    extracted_text,
                 )
+
+            return healed_info
 
         elif action == "extract_html":
             html = await self.browser.extractor.html()
@@ -201,6 +232,8 @@ class WorkflowDispatcher:
                 f"Extracted HTML:\n{html}"
             )
 
+            return None
+
         elif action == "extract_attribute":
             if not step.selector or not step.value:
                 raise ValueError(
@@ -208,7 +241,7 @@ class WorkflowDispatcher:
                     "'selector' and 'value'"
                 )
 
-            value = await self._execute_with_healing(
+            result = await self._execute_with_healing(
                 step,
                 lambda selector: self.browser.extractor.attribute(
                     selector,
@@ -216,9 +249,21 @@ class WorkflowDispatcher:
                 ),
             )
 
+            if isinstance(result, dict):
+                healed_info = result
+                value = await self.browser.extractor.attribute(
+                    step.selector,
+                    step.value,
+                )
+            else:
+                healed_info = None
+                value = result
+
             logger.info(
                 f"Extracted Attribute: {value}"
             )
+
+            return healed_info
 
         elif action == "screenshot":
             if not step.path:
@@ -229,6 +274,8 @@ class WorkflowDispatcher:
             await self.browser.screenshots.capture_page(
                 step.path,
             )
+
+            return None
 
         elif action == "if":
             if step.condition is None:
@@ -290,6 +337,8 @@ class WorkflowDispatcher:
                             child,
                             branch_path=child_path,
                         )
+
+            return None
 
         else:
             raise ValueError(

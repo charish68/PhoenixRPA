@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 from loguru import logger
 
@@ -16,13 +16,15 @@ class JobExecutor:
 
     def __init__(self, db):
         self.db = db
-
         self.job_repo = JobRepository(db)
         self.workflow_repo = WorkflowRepository(db)
         self.execution_service = ExecutionService(db)
 
-    async def execute(self, job, variables: dict[str, str] | None = None):
-
+    async def execute(
+        self,
+        job,
+        variables: dict[str, str] | None = None,
+    ):
         logger.info(
             f"Executing Job #{job.id}"
         )
@@ -34,10 +36,6 @@ class JobExecutor:
 
         browser = BrowserManager()
 
-        # --------------------------------------------------
-        # Create execution run
-        # --------------------------------------------------
-
         run = self.execution_service.start_run(
             job.id,
         )
@@ -48,11 +46,6 @@ class JobExecutor:
         )
 
         try:
-
-            # --------------------------------------------------
-            # Load workflow
-            # --------------------------------------------------
-
             logger.info(
                 f"Loading workflow for job #{job.id}"
             )
@@ -69,14 +62,6 @@ class JobExecutor:
             logger.info(
                 f"Loaded {len(db_steps)} workflow step(s)"
             )
-
-            # --------------------------------------------------
-        # --------------------------------------------------
-        # --------------------------------------------------
-        # --------------------------------------------------
-            # --------------------------------------------------
-            # Convert DB models to Workflow models
-            # --------------------------------------------------
 
             def build_step(db_step):
                 workflow_step = WorkflowStep(
@@ -126,10 +111,6 @@ class JobExecutor:
                 "Workflow converted successfully"
             )
 
-            # --------------------------------------------------
-            # Validate workflow
-            # --------------------------------------------------
-
             logger.info(
                 f"Validating workflow for job #{job.id}"
             )
@@ -146,9 +127,6 @@ class JobExecutor:
                 "Workflow validation passed"
             )
 
-            # Start browser
-            # --------------------------------------------------
-
             logger.info(
                 "Starting browser for job execution..."
             )
@@ -160,10 +138,6 @@ class JobExecutor:
             logger.success(
                 "Browser started for job execution"
             )
-
-            # --------------------------------------------------
-            # Navigate to target website
-            # --------------------------------------------------
 
             if not job.target_site:
                 raise ValueError(
@@ -184,152 +158,38 @@ class JobExecutor:
                 f"Navigated to: {job.target_site}"
             )
 
-            # --------------------------------------------------
-            # Create workflow runner
-            # --------------------------------------------------
-
             runner = WorkflowRunner(
                 browser=browser,
                 variables=variables,
                 db=self.db,
-            run_id=run.id,
+                run_id=run.id,
             )
 
             # --------------------------------------------------
-            # Execute workflow
+            # WorkflowRunner owns individual step execution logs.
+            # This is important because selector healing metadata
+            # is recorded by WorkflowRunner.
             # --------------------------------------------------
 
             for index, step in enumerate(
                 workflow.steps,
                 start=1,
             ):
-
                 logger.info(
                     f"Starting step {index}/"
                     f"{len(workflow.steps)}: "
                     f"{step.action}"
                 )
 
-                # ----------------------------------------------
-                # Create execution log
-                # ----------------------------------------------
-
-                log = self.execution_service.start_step(
-                    job_id=job.id,
-                    step_order=index,
-                    action=step.action,
-                    run_id=run.id,
+                await runner.run_step(
+                    step,
+                    log_execution=True,
                 )
 
-                try:
-
-                    # ------------------------------------------
-                    # Execute step
-                    # ------------------------------------------
-
-                    await runner.run_step(
-                        step
-                    )
-
-                    # ------------------------------------------
-                    # Mark success
-                    # ------------------------------------------
-
-                    self.execution_service.finish_step(
-                        log
-                    )
-
-                    logger.success(
-                        f"Step {index} completed: "
-                        f"{step.action}"
-                    )
-
-                except Exception as e:
-
-                    logger.error(
-                        f"Step {index} failed: "
-                        f"{step.action}"
-                    )
-
-                    # ------------------------------------------
-                    # Nested IF failures belong to the actual
-                    # child step. The IF itself is successful.
-                    # ------------------------------------------
-
-                    if step.action.lower() == "if":
-
-                        self.execution_service.finish_step(
-                            log
-                        )
-
-                    else:
-
-                        # --------------------------------------
-                        # Failure screenshot for the actual
-                        # failing non-IF step.
-                        # --------------------------------------
-
-                        screenshot_path = (
-                            Path("recorded")
-                            / "failures"
-                            / (
-                                f"job_{job.id}"
-                                f"_run_{run.id}"
-                                f"_step_{index}_failure.png"
-                            )
-                        )
-
-                        try:
-
-                            screenshot_path.parent.mkdir(
-                                parents=True,
-                                exist_ok=True,
-                            )
-
-                            logger.info(
-                                "Capturing failure screenshot: "
-                                f"{screenshot_path}"
-                            )
-
-                            await browser.screenshots.capture_page(
-                                str(screenshot_path)
-                            )
-
-                            logger.success(
-                                "Failure screenshot saved: "
-                                f"{screenshot_path}"
-                            )
-
-                            log.screenshot_path = (
-                                screenshot_path.as_posix()
-                            )
-
-                        except Exception as screenshot_error:
-
-                            logger.warning(
-                                "Failed to capture failure "
-                                f"screenshot: {screenshot_error}"
-                            )
-
-                            log.screenshot_path = None
-
-                        # Mark the actual failing step.
-                        self.execution_service.fail_step(
-                            log,
-                            str(e),
-                        )
-
-                    # The complete execution run failed.
-                    self.execution_service.fail_run(
-                        run,
-                        str(e),
-                    )
-
-                    raise
-
-            # --------------------------------------------------
-            # Run completed successfully
-            # --------------------------------------------------
+                logger.success(
+                    f"Step {index} completed: "
+                    f"{step.action}"
+                )
 
             self.execution_service.finish_run(
                 run
@@ -386,10 +246,6 @@ class JobExecutor:
             raise
 
         finally:
-
-            # --------------------------------------------------
-            # Always close browser
-            # --------------------------------------------------
 
             logger.info(
                 f"Closing browser for job #{job.id}"

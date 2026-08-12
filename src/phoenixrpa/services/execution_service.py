@@ -1,4 +1,4 @@
-from phoenixrpa.repositories.execution_repository import (
+﻿from phoenixrpa.repositories.execution_repository import (
     ExecutionRepository,
 )
 
@@ -49,6 +49,7 @@ class ExecutionService:
         action: str,
         run_id: int | None = None,
         branch_path: str | None = None,
+        original_selector: str | None = None,
     ):
         return self.repo.create(
             job_id,
@@ -56,6 +57,7 @@ class ExecutionService:
             action,
             run_id=run_id,
             branch_path=branch_path,
+            original_selector=original_selector,
         )
 
     def finish_step(
@@ -64,6 +66,18 @@ class ExecutionService:
     ):
         return self.repo.mark_success(
             log,
+        )
+
+    def mark_step_healed(
+        self,
+        log,
+        original_selector: str,
+        healed_selector: str,
+    ):
+        return self.repo.mark_healed(
+            log,
+            original_selector,
+            healed_selector,
         )
 
     def fail_step(

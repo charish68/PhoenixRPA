@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -48,6 +48,22 @@ class ExecutionLog(Base):
     status: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
+    )
+
+    healing_status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="NONE",
+    )
+
+    original_selector: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
+    )
+
+    healed_selector: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
     )
 
     started_at: Mapped[datetime] = mapped_column(

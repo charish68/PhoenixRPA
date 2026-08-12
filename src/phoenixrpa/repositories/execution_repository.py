@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 
 from sqlalchemy.orm import Session
 
@@ -80,6 +80,7 @@ class ExecutionRepository:
         action: str,
         run_id: int | None = None,
         branch_path: str | None = None,
+        original_selector: str | None = None,
     ):
         log = ExecutionLog(
             job_id=job_id,
@@ -88,6 +89,9 @@ class ExecutionRepository:
             action=action,
             branch_path=branch_path,
             status="RUNNING",
+            healing_status="NONE",
+            original_selector=original_selector,
+            healed_selector=None,
             started_at=datetime.utcnow(),
         )
 
@@ -115,6 +119,21 @@ class ExecutionRepository:
 
         return log
 
+    def mark_healed(
+        self,
+        log: ExecutionLog,
+        original_selector: str,
+        healed_selector: str,
+    ):
+        log.healing_status = "HEALED"
+        log.original_selector = original_selector
+        log.healed_selector = healed_selector
+
+        self.db.commit()
+        self.db.refresh(log)
+
+        return log
+
     def mark_failed(
         self,
         log: ExecutionLog,
@@ -123,12 +142,6 @@ class ExecutionRepository:
         log.status = "FAILED"
         log.error_message = error
         log.finished_at = datetime.utcnow()
-
-        log.duration_ms = int(
-            (
-                log.finished_at - log.started_at
-            ).total_seconds() * 1000
-        )
 
         self.db.commit()
         self.db.refresh(log)

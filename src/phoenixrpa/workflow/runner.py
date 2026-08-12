@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 from sqlalchemy.orm import Session
 from loguru import logger
@@ -52,6 +52,9 @@ class WorkflowRunner:
         Execute a workflow step with retry support.
         """
 
+        # Preserve the selector before variable resolution.
+        original_selector = step.selector
+
         step.selector = self.variables.resolve(
             step.selector
         )
@@ -83,6 +86,7 @@ class WorkflowRunner:
                 action=step.action,
                 run_id=self.run_id,
                 branch_path=branch_path,
+                original_selector=original_selector,
             )
 
         # --------------------------------------------------
@@ -98,11 +102,26 @@ class WorkflowRunner:
                     f"(Attempt {attempt + 1}/{retries + 1})"
                 )
 
-                await self.dispatcher.dispatch(
+                healing_info = await self.dispatcher.dispatch(
                     step,
                     execute_child=self._execute_nested_step,
                     branch_path=branch_path,
                 )
+
+                # --------------------------------------------------
+                # Record selector healing metadata
+                # --------------------------------------------------
+
+                if (
+                    log is not None
+                    and healing_info is not None
+                    and healing_info.get("status") == "HEALED"
+                ):
+                    self.execution_service.mark_step_healed(
+                        log,
+                        healing_info["original_selector"],
+                        healing_info["healed_selector"],
+                    )
 
                 # --------------------------------------------------
                 # Step succeeded
@@ -141,17 +160,8 @@ class WorkflowRunner:
                 if log is not None:
 
                     # --------------------------------------------------
-                    # IMPORTANT:
-                    #
                     # An IF can receive an exception from a child.
                     # The child owns the failure.
-                    #
-                    # Therefore:
-                    #   CLICK failure -> mark CLICK FAILED
-                    #   IF child failure -> keep IF SUCCESS
-                    #
-                    # The exception is still re-raised so the
-                    # execution run itself becomes FAILED.
                     # --------------------------------------------------
 
                     if step.action.lower() != "if":
@@ -215,9 +225,7 @@ class WorkflowRunner:
 
                         # --------------------------------------------------
                         # Child failed inside IF.
-                        #
-                        # The IF condition itself was evaluated successfully,
-                        # so keep this IF execution log SUCCESS.
+                        # The IF condition itself was evaluated successfully.
                         # --------------------------------------------------
 
                         self.execution_service.finish_step(
@@ -233,9 +241,7 @@ class WorkflowRunner:
                 logger.exception(e)
 
                 # --------------------------------------------------
-                # IMPORTANT:
-                # Propagate the actual child failure so the whole
-                # execution run is still marked FAILED.
+                # Propagate the actual child failure.
                 # --------------------------------------------------
 
                 raise
@@ -272,8 +278,9 @@ class WorkflowRunner:
         for step in workflow.steps:
 
             await self.run_step(
-                step
-            )
+            step,
+            log_execution=True,
+        )
 
         logger.success(
             "Workflow execution completed"

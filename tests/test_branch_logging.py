@@ -1,4 +1,4 @@
-﻿from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -48,6 +48,7 @@ async def test_nested_step_records_branch_path():
         action="click",
         run_id=101,
         branch_path="true.true",
+        original_selector="#userName",
     )
 
     execution_service.finish_step.assert_called_once_with(
