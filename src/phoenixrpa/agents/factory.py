@@ -1,10 +1,15 @@
-from phoenixrpa.agents.mock_provider import MockLLMProvider
-from phoenixrpa.agents.openai_compatible_provider import OpenAICompatibleProvider
+﻿from phoenixrpa.agents.mock_provider import MockLLMProvider
+from phoenixrpa.agents.openai_compatible_provider import (
+    OpenAICompatibleProvider,
+)
 from phoenixrpa.agents.provider import LLMProvider
 from phoenixrpa.core.config import Settings
 
 
-def create_llm_provider(settings: Settings) -> LLMProvider:
+def create_llm_provider(
+    settings: Settings,
+) -> LLMProvider:
+
     provider = settings.llm_provider.lower()
 
     if provider == "mock":
@@ -12,10 +17,12 @@ def create_llm_provider(settings: Settings) -> LLMProvider:
             response="#emailInputChanged"
         )
 
-    if provider == "openai":
+    if provider in {"openai", "groq"}:
+
         if not settings.llm_api_key:
             raise ValueError(
-                "LLM_API_KEY is required for the openai provider."
+                f"LLM_API_KEY is required "
+                f"for the {provider} provider."
             )
 
         return OpenAICompatibleProvider(
@@ -26,5 +33,6 @@ def create_llm_provider(settings: Settings) -> LLMProvider:
         )
 
     raise ValueError(
-        f"Unsupported LLM provider: {settings.llm_provider}"
+        f"Unsupported LLM provider: "
+        f"{settings.llm_provider}"
     )

@@ -34,10 +34,16 @@ def test_factory_creates_mock_provider():
     )
 
 
-def test_factory_creates_openai_provider():
+@pytest.mark.parametrize(
+    "provider_name",
+    ["openai", "groq"],
+)
+def test_factory_creates_openai_compatible_provider(
+    provider_name,
+):
     provider = create_llm_provider(
         make_settings(
-            "openai",
+            provider_name,
             api_key="test-key",
         )
     )
@@ -53,13 +59,19 @@ def test_factory_creates_openai_provider():
     assert provider.timeout == 10.0
 
 
-def test_factory_rejects_openai_without_api_key():
+@pytest.mark.parametrize(
+    "provider_name",
+    ["openai", "groq"],
+)
+def test_factory_rejects_provider_without_api_key(
+    provider_name,
+):
     with pytest.raises(
         ValueError,
         match="LLM_API_KEY is required",
     ):
         create_llm_provider(
-            make_settings("openai")
+            make_settings(provider_name)
         )
 
 
