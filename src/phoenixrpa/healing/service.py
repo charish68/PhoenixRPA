@@ -1,22 +1,141 @@
-﻿from difflib import SequenceMatcher
+from difflib import SequenceMatcher
 
 from playwright.async_api import Page
 
+from phoenixrpa.agents.healing_agent import AIHealingAgent
+from phoenixrpa.healing.models import HealingResult
 from phoenixrpa.core.logger import logger
 
 
 class HealingService:
 
-    def __init__(self, page: Page):
+    def __init__(
+        self,
+        page: Page,
+        ai_agent: AIHealingAgent | None = None,
+    ):
         self.page = page
+        self.ai_agent = ai_agent
+
+    async def _validate_selector(
+        self,
+        selector: str,
+    ) -> bool:
+        """
+        Validate that an AI-generated selector is valid,
+        resolves successfully, and identifies exactly one element.
+        """
+
+        if not selector:
+            return False
+
+        try:
+            count = await self.page.locator(selector).count()
+
+            if count != 1:
+                logger.warning(
+                    f"AI selector rejected: "
+                    f"{selector} (matches {count} elements)"
+                )
+                return False
+
+            return True
+
+        except Exception as e:
+            logger.warning(
+                f"AI selector validation failed: "
+                f"{selector} -> {e}"
+            )
+            return False
+
+    async def _ai_heal(
+        self,
+        failed_selector: str,
+    ) -> str | None:
+        """
+        Ask the AI healing agent for a selector and
+        validate the result before returning it.
+        """
+
+        if self.ai_agent is None:
+            logger.info(
+                "AI healing is not configured."
+            )
+            return None
+
+        try:
+            page_context = await self.page.locator(
+                "body"
+            ).inner_text()
+
+            logger.info(
+                f"Attempting AI selector healing for: "
+                f"{failed_selector}"
+            )
+
+            suggested_selector = (
+                await self.ai_agent.suggest_selector(
+                    failed_selector,
+                    page_context,
+                )
+            )
+
+            if not suggested_selector:
+                logger.warning(
+                    "AI healing returned no selector."
+                )
+                return None
+
+            suggested_selector = (
+                suggested_selector.strip()
+            )
+
+            # Remove accidental markdown code fences.
+            if suggested_selector.startswith("```"):
+                suggested_selector = (
+                    suggested_selector
+                    .replace("```css", "")
+                    .replace("```", "")
+                    .strip()
+                )
+
+            logger.info(
+                f"AI suggested selector: "
+                f"{suggested_selector}"
+            )
+
+            if not await self._validate_selector(
+                suggested_selector
+            ):
+                logger.warning(
+                    "AI suggested selector failed "
+                    "Playwright validation."
+                )
+                return None
+
+            logger.success(
+                f"AI selector healed: "
+                f"{failed_selector} -> "
+                f"{suggested_selector}"
+            )
+
+            return suggested_selector
+
+        except Exception as e:
+            logger.exception(
+                f"AI healing failed: {e}"
+            )
+            return None
 
     async def find_best_selector(
         self,
         failed_selector: str,
-    ) -> str | None:
+        return_result: bool = False,
+    ) -> str | HealingResult | None:
 
         logger.info(
-            f"Attempting selector healing for: {failed_selector}"
+            f"Attempting selector healing for: "
+            f"{failed_selector}"
         )
 
         # --------------------------------------------------------
@@ -24,11 +143,14 @@ class HealingService:
         # --------------------------------------------------------
 
         try:
-            locator = self.page.locator(failed_selector)
+            locator = self.page.locator(
+                failed_selector
+            )
 
             if await locator.count() > 0:
                 logger.info(
-                    f"Original selector still exists: {failed_selector}"
+                    f"Original selector still exists: "
+                    f"{failed_selector}"
                 )
                 return failed_selector
 
@@ -67,11 +189,21 @@ class HealingService:
                 score = 0
                 selector = None
 
-                element_id = await element.get_attribute("id")
-                name = await element.get_attribute("name")
-                test_id = await element.get_attribute("data-testid")
-                aria_label = await element.get_attribute("aria-label")
-                placeholder = await element.get_attribute("placeholder")
+                element_id = await element.get_attribute(
+                    "id"
+                )
+                name = await element.get_attribute(
+                    "name"
+                )
+                test_id = await element.get_attribute(
+                    "data-testid"
+                )
+                aria_label = await element.get_attribute(
+                    "aria-label"
+                )
+                placeholder = await element.get_attribute(
+                    "placeholder"
+                )
 
                 # ------------------------------------------------
                 # Build stable selector
@@ -81,16 +213,24 @@ class HealingService:
                     selector = f"#{element_id}"
 
                 elif test_id:
-                    selector = f'[data-testid="{test_id}"]'
+                    selector = (
+                        f'[data-testid="{test_id}"]'
+                    )
 
                 elif name:
-                    selector = f'[name="{name}"]'
+                    selector = (
+                        f'[name="{name}"]'
+                    )
 
                 elif aria_label:
-                    selector = f'[aria-label="{aria_label}"]'
+                    selector = (
+                        f'[aria-label="{aria_label}"]'
+                    )
 
                 elif placeholder:
-                    selector = f'[placeholder="{placeholder}"]'
+                    selector = (
+                        f'[placeholder="{placeholder}"]'
+                    )
 
                 if selector is None:
                     continue
@@ -115,7 +255,10 @@ class HealingService:
 
                 for value in values:
 
-                    if failed_hint and failed_hint in value:
+                    if (
+                        failed_hint
+                        and failed_hint in value
+                    ):
                         score += 10
 
                 # ------------------------------------------------
@@ -178,10 +321,6 @@ class HealingService:
                 except Exception:
                     continue
 
-                # ------------------------------------------------
-                # Candidate logging
-                # ------------------------------------------------
-
                 logger.info(
                     f"HEAL CANDIDATE -> "
                     f"selector={selector}, "
@@ -208,11 +347,12 @@ class HealingService:
             except Exception as e:
 
                 logger.debug(
-                    f"Unable to inspect healing candidate: {e}"
+                    f"Unable to inspect healing "
+                    f"candidate: {e}"
                 )
 
         # --------------------------------------------------------
-        # 4. Return best candidate
+        # 4. Deterministic healing succeeded
         # --------------------------------------------------------
 
         if best_selector:
@@ -224,14 +364,51 @@ class HealingService:
                 f"(score={best_score})"
             )
 
-            return best_selector
+            result = HealingResult(
+            status="HEALED",
+            original_selector=failed_selector,
+            healed_selector=best_selector,
+            method="DETERMINISTIC",
+        )
+
+            return result if return_result else best_selector
 
         # --------------------------------------------------------
-        # 5. Nothing found
+        # 5. AI healing fallback
         # --------------------------------------------------------
 
         logger.warning(
-            f"Unable to heal selector: {failed_selector}"
+            f"Deterministic healing failed for: "
+            f"{failed_selector}"
+        )
+
+        ai_selector = await self._ai_heal(
+            failed_selector
+        )
+
+        if ai_selector:
+
+            result = HealingResult(
+
+                status="HEALED",
+
+                original_selector=failed_selector,
+
+                healed_selector=ai_selector,
+
+                method="AI",
+
+            )
+
+
+            return result if return_result else ai_selector
+        # --------------------------------------------------------
+        # 6. Nothing found
+        # --------------------------------------------------------
+
+        logger.warning(
+            f"Unable to heal selector: "
+            f"{failed_selector}"
         )
 
         return None
