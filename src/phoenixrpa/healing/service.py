@@ -366,12 +366,18 @@ class HealingService:
                 f"(score={best_score})"
             )
 
+            confidence = min(
+                best_score / 21.0,
+                1.0,
+            )
+
             result = HealingResult(
             status="HEALED",
             original_selector=failed_selector,
             healed_selector=best_selector,
             method="DETERMINISTIC",
-        )
+                        confidence=confidence,
+            )
 
             return result if return_result else best_selector
 
@@ -389,7 +395,6 @@ class HealingService:
         )
 
         if ai_selector:
-
             result = HealingResult(
 
                 status="HEALED",

@@ -54,6 +54,7 @@ async def test_dispatcher_returns_healing_metadata():
         "original_selector": "#userEmail",
         "healed_selector": "#emailInputChanged",
         "method": "AI",
+        "confidence": None,
     }
 
     assert step.selector == "#emailInputChanged"
