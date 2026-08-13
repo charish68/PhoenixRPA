@@ -121,6 +121,7 @@ class WorkflowRunner:
                         log,
                         healing_info["original_selector"],
                         healing_info["healed_selector"],
+                        healing_method=healing_info.get("method"),
                     )
 
                 # --------------------------------------------------

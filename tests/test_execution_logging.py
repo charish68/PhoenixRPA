@@ -55,3 +55,49 @@ async def test_retry_uses_one_execution_log():
 
     # Dispatcher was actually attempted twice.
     assert dispatcher.dispatch.await_count == 2
+@pytest.mark.asyncio
+async def test_runner_records_healing_method():
+    dispatcher = MagicMock()
+
+    dispatcher.dispatch = AsyncMock(
+        return_value={
+            "status": "HEALED",
+            "original_selector": "#userEmail",
+            "healed_selector": "#emailInputChanged",
+            "method": "AI",
+        }
+    )
+
+    runner = WorkflowRunner(
+        browser=MagicMock(),
+        db=MagicMock(),
+    )
+
+    runner.dispatcher = dispatcher
+    runner.execution_service = MagicMock()
+    runner.run_id = 1
+
+    step = WorkflowStep(
+        action="click",
+        selector="#userEmail",
+        retries=0,
+        timeout=30000,
+        job_id=16,
+        step_order=1,
+    )
+
+    log = MagicMock()
+
+    runner.execution_service.start_step.return_value = log
+
+    await runner.run_step(
+        step,
+        log_execution=True,
+    )
+
+    runner.execution_service.mark_step_healed.assert_called_once_with(
+        log,
+        "#userEmail",
+        "#emailInputChanged",
+        healing_method="AI",
+    )
