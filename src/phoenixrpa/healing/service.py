@@ -1,3 +1,4 @@
+import asyncio
 from difflib import SequenceMatcher
 
 from playwright.async_api import Page
@@ -73,11 +74,12 @@ class HealingService:
                 f"{failed_selector}"
             )
 
-            suggested_selector = (
-                await self.ai_agent.suggest_selector(
+            suggested_selector = await asyncio.wait_for(
+                self.ai_agent.suggest_selector(
                     failed_selector,
                     page_context,
-                )
+                ),
+                timeout=30.0,
             )
 
             if not suggested_selector:

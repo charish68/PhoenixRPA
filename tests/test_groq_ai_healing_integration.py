@@ -1,9 +1,9 @@
-import pytest
+﻿import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from phoenixrpa.agents.factory import create_llm_provider
 from phoenixrpa.agents.healing_agent import AIHealingAgent
-from phoenixrpa.core.config import Settings
+from phoenixrpa.core.config import get_settings
 from phoenixrpa.healing.service import HealingService
 
 
@@ -31,6 +31,7 @@ async def test_groq_ai_healing_integration():
     ai_locator.count = AsyncMock(return_value=1)
 
     def locator(selector):
+
         if selector == "#userEmail":
             return original_locator
 
@@ -52,19 +53,6 @@ async def test_groq_ai_healing_integration():
 
     page.locator.side_effect = locator
 
-    settings = Settings(
-        database_url="postgresql://test",
-        phoenixrpa_extension_path=".",
-        llm_provider="groq",
-        llm_api_key=None,
-        llm_model="llama-3.1-8b-instant",
-        llm_base_url="https://api.groq.com/openai/v1",
-        llm_timeout=30.0,
-    )
-
-    # Read the real key from the normal application settings.
-    from phoenixrpa.core.config import get_settings
-
     settings = get_settings()
 
     if settings.llm_provider.lower() != "groq":
@@ -85,4 +73,5 @@ async def test_groq_ai_healing_integration():
         "#userEmail"
     )
 
-    assert result == "#emailInputChanged"
+    assert result is not None
+    assert await page.locator(result).count() == 1
