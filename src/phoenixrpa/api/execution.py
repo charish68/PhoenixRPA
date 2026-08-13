@@ -58,6 +58,20 @@ def get_run_logs(
 
     return service.list_run_logs(run_id)
 
+# ==================================================
+
+# Healing statistics
+
+# ==================================================
+
+@router.get("/healing-stats")
+def get_healing_stats(
+    job_id: int,
+    db: Session = Depends(get_db),
+):
+    return ExecutionService(db).get_healing_stats(
+        job_id,
+    )
 
 # ==================================================
 # Legacy endpoint

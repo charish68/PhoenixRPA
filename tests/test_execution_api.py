@@ -1,10 +1,12 @@
-﻿from unittest.mock import MagicMock, patch
+﻿from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from fastapi.testclient import TestClient
 
 from phoenixrpa.main import app
 from phoenixrpa.db.dependency import get_db
-from types import SimpleNamespace
 
 
 def test_get_run_logs_returns_404_for_missing_run():
@@ -68,6 +70,42 @@ def test_get_run_logs_returns_healing_metadata():
         assert logs[0]["original_selector"] == "#userEmail"
         assert logs[0]["healed_selector"] == "#emailInputChanged"
         assert logs[0]["healing_method"] == "AI"
+
+    finally:
+        app.dependency_overrides.clear()
+
+def test_get_healing_stats():
+    fake_db = MagicMock()
+
+    app.dependency_overrides.clear()
+    app.dependency_overrides[get_db] = lambda: fake_db
+
+    try:
+        with patch(
+            "phoenixrpa.api.execution.ExecutionService.get_healing_stats",
+            return_value={
+                "total_steps": 3,
+                "healed_steps": 2,
+                "healing_rate": 66.66666666666666,
+                "ai_healed": 1,
+            },
+        ):
+            client = TestClient(app)
+
+            response = client.get(
+                "/jobs/16/healing-stats"
+            )
+
+        assert response.status_code == 200
+
+        body = response.json()
+
+        assert body["total_steps"] == 3
+        assert body["healed_steps"] == 2
+        assert body["ai_healed"] == 1
+        assert body["healing_rate"] == pytest.approx(
+            66.66666666666667
+        )
 
     finally:
         app.dependency_overrides.clear()

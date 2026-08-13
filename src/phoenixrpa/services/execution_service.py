@@ -104,6 +104,14 @@ class ExecutionService:
             job_id,
         )
 
+    def get_healing_stats(
+        self,
+        job_id: int,
+    ):
+        return self.repo.get_healing_stats(
+            job_id,
+        )
+
     def list_run_logs(
         self,
         run_id: int,

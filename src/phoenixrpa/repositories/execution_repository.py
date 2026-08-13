@@ -169,6 +169,48 @@ class ExecutionRepository:
             .all()
         )
 
+    def get_healing_stats(
+        self,
+        job_id: int,
+    ):
+        logs = (
+            self.db.query(ExecutionLog)
+            .filter(
+                ExecutionLog.job_id == job_id
+            )
+            .all()
+        )
+
+        total_steps = len(logs)
+
+        healed_steps = sum(
+            1
+            for log in logs
+            if log.healing_status == "HEALED"
+        )
+
+        ai_healed = sum(
+            1
+            for log in logs
+            if (
+                log.healing_status == "HEALED"
+                and log.healing_method == "AI"
+            )
+        )
+
+        healing_rate = (
+            (healed_steps / total_steps) * 100
+            if total_steps
+            else 0.0
+        )
+
+        return {
+            "total_steps": total_steps,
+            "healed_steps": healed_steps,
+            "healing_rate": healing_rate,
+            "ai_healed": ai_healed,
+        }
+
     def list_by_run(
         self,
         run_id: int,
