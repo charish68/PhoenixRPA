@@ -124,10 +124,12 @@ class ExecutionRepository:
         log: ExecutionLog,
         original_selector: str,
         healed_selector: str,
+        healing_method: str | None = None,
     ):
         log.healing_status = "HEALED"
         log.original_selector = original_selector
         log.healed_selector = healed_selector
+        log.healing_method = healing_method
 
         self.db.commit()
         self.db.refresh(log)
