@@ -1,4 +1,4 @@
-﻿from phoenixrpa.agents.base import HealingAgent
+from phoenixrpa.agents.base import HealingAgent
 from phoenixrpa.agents.provider import LLMProvider
 
 
@@ -27,8 +27,13 @@ The current page context is:
 
 {page_context}
 
-Return ONLY the best replacement CSS selector.
-Do not explain your answer.
+Rules:
+1. Return a selector that matches an element explicitly present in the page context.
+2. Do not invent IDs, classes, attributes, or elements.
+3. If an element has an id, prefer the exact CSS id selector using that id.
+4. The replacement must be a valid CSS selector.
+5. Return ONLY the selector.
+6. Do not explain your answer.
 """
 
         response = await self.provider.generate(prompt)

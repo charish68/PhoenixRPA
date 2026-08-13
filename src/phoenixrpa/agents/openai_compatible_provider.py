@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 import urllib.error
 import urllib.request
@@ -54,6 +54,8 @@ class OpenAICompatibleProvider(LLMProvider):
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
+            "User-Agent": "PhoenixRPA/1.0",
+            "Accept": "application/json",
             },
             method="POST",
         )
@@ -82,6 +84,26 @@ class OpenAICompatibleProvider(LLMProvider):
                 )
 
             return content.strip()
+
+        except urllib.error.HTTPError as exc:
+
+            try:
+                error_body = (
+                    exc.read()
+                    .decode("utf-8")
+                )
+            except Exception:
+                error_body = str(exc)
+
+            logger.error(
+                f"LLM provider HTTP error "
+                f"{exc.code}: {error_body}"
+            )
+
+            raise RuntimeError(
+                f"LLM provider request failed: "
+                f"HTTP {exc.code}: {error_body}"
+            ) from exc
 
         except (
             urllib.error.URLError,
