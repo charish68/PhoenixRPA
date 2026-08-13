@@ -1,4 +1,4 @@
-﻿from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session
 
 from phoenixrpa.browser.manager import BrowserManager
 from phoenixrpa.core.logger import logger
@@ -47,16 +47,28 @@ class WorkflowDispatcher:
                 "Attempting healing..."
             )
 
-            healed = await self.browser.healer.find_best_selector(
-                step.selector,
+            healing_result = (
+                await self.browser.healer.find_best_selector(
+                    step.selector,
+                    return_result=True,
+                )
             )
 
-            if healed is None:
+            if healing_result is None:
                 raise
+
+            healed = healing_result.healed_selector
+
+            if healed is None:
+                raise RuntimeError(
+                    "Healing returned a result without "
+                    "a healed selector."
+                )
 
             logger.success(
                 f"Selector healed: "
-                f"{step.selector} -> {healed}"
+                f"{step.selector} -> {healed} "
+                f"(method={healing_result.method})"
             )
 
             if (
@@ -77,12 +89,7 @@ class WorkflowDispatcher:
 
             await action(healed)
 
-            return {
-                "status": "HEALED",
-                "original_selector": original_selector,
-                "healed_selector": healed,
-            }
-
+            return healing_result.to_dict()
     async def dispatch(
         self,
         step: WorkflowStep,
