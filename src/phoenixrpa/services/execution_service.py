@@ -74,12 +74,14 @@ class ExecutionService:
         original_selector: str,
         healed_selector: str,
         healing_method: str | None = None,
+        healing_confidence: float | None = None,
     ):
         return self.repo.mark_healed(
             log,
             original_selector,
             healed_selector,
             healing_method=healing_method,
+            healing_confidence=healing_confidence,
         )
 
     def fail_step(

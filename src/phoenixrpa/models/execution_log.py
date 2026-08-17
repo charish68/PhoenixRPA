@@ -1,6 +1,6 @@
-﻿from datetime import datetime
+from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from phoenixrpa.db.base import Base
@@ -63,6 +63,11 @@ class ExecutionLog(Base):
 
     healed_selector: Mapped[str | None] = mapped_column(
         String,
+        nullable=True,
+    )
+
+    healing_confidence: Mapped[float | None] = mapped_column(
+        Float,
         nullable=True,
     )
 

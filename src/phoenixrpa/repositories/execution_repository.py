@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 
@@ -125,11 +125,14 @@ class ExecutionRepository:
         original_selector: str,
         healed_selector: str,
         healing_method: str | None = None,
+        healing_confidence: float | None = None,
     ):
         log.healing_status = "HEALED"
         log.original_selector = original_selector
         log.healed_selector = healed_selector
         log.healing_method = healing_method
+        log.healing_confidence = healing_confidence
+
 
         self.db.commit()
         self.db.refresh(log)

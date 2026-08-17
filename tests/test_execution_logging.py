@@ -1,4 +1,4 @@
-﻿from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -100,4 +100,5 @@ async def test_runner_records_healing_method():
         "#userEmail",
         "#emailInputChanged",
         healing_method="AI",
+    healing_confidence=None,
     )
