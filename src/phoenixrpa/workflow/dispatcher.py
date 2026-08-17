@@ -90,6 +90,12 @@ class WorkflowDispatcher:
             await action(healed)
 
             return healing_result.to_dict()
+    def _resolve_value(self, value):
+        if value is None:
+            return None
+
+        return self.variables.resolve(value)
+
     async def dispatch(
         self,
         step: WorkflowStep,
@@ -104,8 +110,10 @@ class WorkflowDispatcher:
                     "goto requires 'value'"
                 )
 
+            resolved_value = self._resolve_value(step.value)
+
             await self.browser.navigator.goto(
-                step.value,
+                resolved_value,
                 timeout=step.timeout,
             )
 
@@ -131,11 +139,15 @@ class WorkflowDispatcher:
                     "fill requires 'selector' and 'value'"
                 )
 
+            resolved_value = self._resolve_value(
+                step.value
+            )
+
             return await self._execute_with_healing(
                 step,
                 lambda selector: self.browser.actions.fill(
                     selector,
-                    step.value,
+                    resolved_value,
                     timeout=step.timeout,
                 ),
             )
@@ -189,8 +201,10 @@ class WorkflowDispatcher:
                     "wait_url requires 'value'"
                 )
 
+            resolved_value = self._resolve_value(step.value)
+
             await self.browser.waits.url(
-                step.value,
+                resolved_value,
                 timeout=step.timeout,
             )
 

@@ -1,38 +1,47 @@
+from datetime import date, timedelta
 import re
 
 
 class VariableResolver:
-    def __init__(self, variables: dict[str, str] | None = None):
+
+    _DATE_PATTERN = re.compile(
+        r"^\{\{(TODAY|YESTERDAY|TOMORROW)([+-]\d+)?\}\}$"
+    )
+
+    def __init__(self, variables=None):
         self.variables = variables or {}
 
-    def resolve(
-        self,
-        value: str | None,
-    ) -> str | None:
-        if value is None:
-            return None
+    def resolve(self, value):
+        if not isinstance(value, str):
+            return value
 
-        pattern = r"\$\{([^}]+)\}"
+        # Existing workflow variables
+        if value.startswith("{{") and value.endswith("}}"):
+            variable_name = value[2:-2].strip()
 
-        def replace(match):
-            key = match.group(1)
-            return str(self.variables.get(key, match.group(0)))
+            if variable_name in self.variables:
+                return self.variables[variable_name]
 
-        return re.sub(
-            pattern,
-            replace,
-            value,
-        )
+        # Dynamic date expressions
+        match = self._DATE_PATTERN.match(value.strip())
 
-    def set(
-        self,
-        key: str,
-        value: str,
-    ):
-        self.variables[key] = value
+        if match:
+            keyword = match.group(1)
+            offset_text = match.group(2)
 
-    def get(
-        self,
-        key: str,
-    ):
-        return self.variables.get(key)
+            today = date.today()
+
+            if keyword == "TODAY":
+                resolved_date = today
+            elif keyword == "YESTERDAY":
+                resolved_date = today - timedelta(days=1)
+            else:
+                resolved_date = today + timedelta(days=1)
+
+            if offset_text:
+                offset = int(offset_text)
+                resolved_date += timedelta(days=offset)
+
+            return resolved_date.isoformat()
+
+        return value
