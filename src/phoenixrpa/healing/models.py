@@ -14,12 +14,18 @@ class HealingResult:
     healed_selector: str | None = None
     method: str | None = None
     confidence: float | None = None
+    failure_reason: str | None = None
 
     def to_dict(self) -> dict:
-        return {
+        result = {
             "status": self.status,
             "original_selector": self.original_selector,
             "healed_selector": self.healed_selector,
             "method": self.method,
             "confidence": self.confidence,
         }
+
+        if self.failure_reason is not None:
+            result["failure_reason"] = self.failure_reason
+
+        return result

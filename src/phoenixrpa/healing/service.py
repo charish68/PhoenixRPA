@@ -17,6 +17,7 @@ class HealingService:
     ):
         self.page = page
         self.ai_agent = ai_agent
+        self.last_failure_reason: str | None = None
 
     async def _validate_selector(
         self,
@@ -59,6 +60,7 @@ class HealingService:
         """
 
         if self.ai_agent is None:
+            self.last_failure_reason = "NO_AI_AGENT"
             logger.info(
                 "AI healing is not configured."
             )
@@ -83,6 +85,7 @@ class HealingService:
             )
 
             if not suggested_selector:
+                self.last_failure_reason = "AI_NO_SELECTOR"
                 logger.warning(
                     "AI healing returned no selector."
                 )
@@ -109,6 +112,7 @@ class HealingService:
             if not await self._validate_selector(
                 suggested_selector
             ):
+                self.last_failure_reason = "AI_VALIDATION_FAILED"
                 logger.warning(
                     "AI suggested selector failed "
                     "Playwright validation."
@@ -124,6 +128,7 @@ class HealingService:
             return suggested_selector
 
         except Exception as e:
+            self.last_failure_reason = "AI_EXCEPTION"
             logger.exception(
                 f"AI healing failed: {e}"
             )
@@ -390,6 +395,8 @@ class HealingService:
             f"{failed_selector}"
         )
 
+        self.last_failure_reason = None
+
         ai_selector = await self._ai_heal(
             failed_selector
         )
@@ -414,4 +421,16 @@ class HealingService:
             f"{failed_selector}"
         )
 
+        if return_result:
+            return HealingResult(
+                status="FAILED",
+                original_selector=failed_selector,
+                method="AI",
+                failure_reason=(
+                    self.last_failure_reason
+                    or "DETERMINISTIC_NO_MATCH"
+                ),
+            )
+
         return None
+
