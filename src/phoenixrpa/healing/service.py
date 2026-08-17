@@ -396,15 +396,11 @@ class HealingService:
 
         if ai_selector:
             result = HealingResult(
-
                 status="HEALED",
-
                 original_selector=failed_selector,
-
                 healed_selector=ai_selector,
-
                 method="AI",
-
+                confidence=1.0,
             )
 
 
