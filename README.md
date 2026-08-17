@@ -21,6 +21,9 @@ The framework allows browser workflows to be created, stored, executed, monitore
 - Playwright validation of AI-generated selectors
 - AI healing timeout protection
 - Healing metadata tracking
+- Deterministic healing confidence scoring
+- AI healing validation confidence
+- Healing statistics and analytics API
 - Browser recording extension
 - PostgreSQL persistence
 - Alembic database migrations
