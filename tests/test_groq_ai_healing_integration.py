@@ -16,6 +16,17 @@ async def test_groq_ai_healing_integration():
     original_locator = MagicMock()
     original_locator.count = AsyncMock(return_value=0)
 
+    candidate = MagicMock()
+    candidate.evaluate = AsyncMock(
+        return_value={
+            "tag": "input",
+            "id": "emailInputChanged",
+            "name": None,
+            "type": "email",
+            "placeholder": "Email",
+            "text": "",
+       }
+    )
     candidates_locator = MagicMock()
     candidates_locator.all = AsyncMock(return_value=[])
 
