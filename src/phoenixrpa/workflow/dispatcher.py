@@ -126,33 +126,50 @@ class WorkflowDispatcher:
                     "click requires 'selector'"
                 )
 
-            return await self._execute_with_healing(
-                step,
-                lambda selector: self.browser.actions.click(
-                    selector,
-                    timeout=step.timeout,
-                ),
+            original_selector = step.selector
+            resolved_selector = self._resolve_value(
+                original_selector
             )
 
+            step.selector = resolved_selector
+
+            try:
+                return await self._execute_with_healing(
+                    step,
+                    lambda selector: self.browser.actions.click(
+                        selector,
+                        timeout=step.timeout,
+                    ),
+                )
+            finally:
+                step.selector = original_selector
         elif action == "fill":
             if not step.selector or step.value is None:
                 raise ValueError(
                     "fill requires 'selector' and 'value'"
                 )
 
+            original_selector = step.selector
+            resolved_selector = self._resolve_value(
+                original_selector
+            )
             resolved_value = self._resolve_value(
                 step.value
             )
 
-            return await self._execute_with_healing(
-                step,
-                lambda selector: self.browser.actions.fill(
-                    selector,
-                    resolved_value,
-                    timeout=step.timeout,
-                ),
-            )
+            step.selector = resolved_selector
 
+            try:
+                return await self._execute_with_healing(
+                    step,
+                    lambda selector: self.browser.actions.fill(
+                        selector,
+                        resolved_value,
+                        timeout=step.timeout,
+                    ),
+                )
+            finally:
+                step.selector = original_selector
         elif action == "press":
             if not step.selector or step.value is None:
                 raise ValueError(
@@ -513,5 +530,7 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
+
 
 
