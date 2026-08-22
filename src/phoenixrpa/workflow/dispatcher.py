@@ -297,14 +297,26 @@ class WorkflowDispatcher:
             return extracted_value
 
         elif action == "extract_html":
-            html = await self.browser.extractor.html()
-
-            logger.info(
-                f"Extracted HTML:\n{html}"
+            extracted_html = (
+                await self.browser.extractor.html()
             )
 
-            return None
+            logger.info(
+                f"Extracted HTML:\n{extracted_html}"
+            )
 
+            if step.value:
+                self.variables.set(
+                    step.value,
+                    extracted_html,
+                )
+
+                logger.success(
+                    f"Extracted HTML into variable "
+                    f"'{step.value}'"
+                )
+
+            return extracted_html
         elif action == "extract_attribute":
             if not step.selector or not step.value:
                 raise ValueError(
@@ -415,3 +427,5 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
+
