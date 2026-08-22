@@ -72,3 +72,14 @@ def test_validator_rejects_unsupported_condition_operator():
         match="unsupported condition operator",
     ):
         WorkflowValidator().validate(workflow)
+def test_validator_accepts_condition_with_spaced_right_value():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="{{status}} == 'Login successful'",
+            )
+        ]
+    )
+
+    WorkflowValidator().validate(workflow)

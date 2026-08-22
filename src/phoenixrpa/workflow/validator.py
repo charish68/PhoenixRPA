@@ -271,7 +271,7 @@ class WorkflowValidator:
         index,
     ) -> None:
     
-        parts = step.condition.split()
+        parts = step.condition.split(maxsplit=2)
     
         if len(parts) != 3:
             raise WorkflowValidationError(
@@ -286,3 +286,4 @@ class WorkflowValidator:
                 f"Step {index}: unsupported condition "
                 f"operator '{operator}'."
             )
+
