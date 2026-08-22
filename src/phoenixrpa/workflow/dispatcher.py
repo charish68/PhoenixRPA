@@ -199,6 +199,23 @@ class WorkflowDispatcher:
 
             return None
 
+        elif action == "wait_url":
+            if not step.value:
+                raise ValueError(
+                    "wait_url requires 'value'"
+                )
+
+            resolved_value = self.variables.resolve(
+                step.value
+            )
+
+            await self.browser.waits.url(
+                resolved_value,
+                timeout=step.timeout,
+            )
+
+            return None
+
         elif action == "wait_element":
             if not step.selector:
                 raise ValueError(
@@ -212,21 +229,6 @@ class WorkflowDispatcher:
                     timeout=step.timeout,
                 ),
             )
-
-        elif action == "wait_url":
-            if not step.value:
-                raise ValueError(
-                    "wait_url requires 'value'"
-                )
-
-            resolved_value = self._resolve_value(step.value)
-
-            await self.browser.waits.url(
-                resolved_value,
-                timeout=step.timeout,
-            )
-
-            return None
 
         elif action == "extract_text":
             if not step.selector:
@@ -459,6 +461,7 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
 
 
 
