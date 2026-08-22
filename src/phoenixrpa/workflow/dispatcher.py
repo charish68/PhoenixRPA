@@ -250,11 +250,37 @@ class WorkflowDispatcher:
                     "extract_text requires variable name in 'value'"
                 )
 
-            extracted_value = (
-                await self.browser.extractor.text(
-                    step.selector
-                )
+            resolved_selector = self._resolve_value(
+                step.selector
             )
+
+            original_selector = step.selector
+            step.selector = resolved_selector
+
+            extracted_value = None
+
+            async def extract(selector):
+                nonlocal extracted_value
+
+                extracted_value = (
+                    await self.browser.extractor.text(
+                        selector
+                    )
+                )
+
+            try:
+                await self._execute_with_healing(
+                    step,
+                    extract,
+                )
+            finally:
+                step.selector = original_selector
+
+            if extracted_value is None:
+                raise ValueError(
+                    f"Unable to extract text from "
+                    f"'{resolved_selector}'"
+                )
 
             self.variables.set(
                 step.value,
@@ -271,7 +297,6 @@ class WorkflowDispatcher:
             )
 
             return extracted_value
-
         elif action == "extract_attribute":
             if not step.selector:
                 raise ValueError(
