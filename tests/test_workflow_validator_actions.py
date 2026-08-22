@@ -29,3 +29,7 @@ def test_validator_accepts_extract_table():
     )
 
     WorkflowValidator().validate(workflow)
+def test_supported_actions_are_unique():
+    from phoenixrpa.workflow.validator import SUPPORTED_ACTIONS
+
+    assert len(SUPPORTED_ACTIONS) == 14
