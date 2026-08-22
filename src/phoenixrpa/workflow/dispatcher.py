@@ -176,29 +176,50 @@ class WorkflowDispatcher:
                     "press requires 'selector' and 'value'"
                 )
 
-            return await self._execute_with_healing(
-                step,
-                lambda selector: self.browser.actions.press(
-                    selector,
-                    step.value,
-                    timeout=step.timeout,
-                ),
+            original_selector = step.selector
+            resolved_selector = self._resolve_value(
+                original_selector
+            )
+            resolved_value = self._resolve_value(
+                step.value
             )
 
+            step.selector = resolved_selector
+
+            try:
+                return await self._execute_with_healing(
+                    step,
+                    lambda selector: self.browser.actions.press(
+                        selector,
+                        resolved_value,
+                        timeout=step.timeout,
+                    ),
+                )
+            finally:
+                step.selector = original_selector
         elif action == "hover":
             if not step.selector:
                 raise ValueError(
                     "hover requires 'selector'"
                 )
 
-            return await self._execute_with_healing(
-                step,
-                lambda selector: self.browser.actions.hover(
-                    selector,
-                    timeout=step.timeout,
-                ),
+            original_selector = step.selector
+            resolved_selector = self._resolve_value(
+                original_selector
             )
 
+            step.selector = resolved_selector
+
+            try:
+                return await self._execute_with_healing(
+                    step,
+                    lambda selector: self.browser.actions.hover(
+                        selector,
+                        timeout=step.timeout,
+                    ),
+                )
+            finally:
+                step.selector = original_selector
         elif action == "wait_text":
             if not step.value:
                 raise ValueError(
@@ -530,6 +551,8 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
+
 
 
 
