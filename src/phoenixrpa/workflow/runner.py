@@ -54,6 +54,8 @@ class WorkflowRunner:
 
         # Preserve the selector before variable resolution.
         original_selector = step.selector
+        original_value = step.value
+        original_path = step.path
 
         step.selector = self.variables.resolve(
             step.selector
@@ -138,6 +140,10 @@ class WorkflowRunner:
                     f"Step '{step.action}' "
                     f"completed successfully"
                 )
+
+                step.selector = original_selector
+                step.value = original_value
+                step.path = original_path
 
                 return
 
@@ -246,7 +252,12 @@ class WorkflowRunner:
                 # Propagate the actual child failure.
                 # --------------------------------------------------
 
+                step.selector = original_selector
+                step.value = original_value
+                step.path = original_path
+
                 raise
+
 
     async def _execute_nested_step(
         self,
@@ -287,3 +298,8 @@ class WorkflowRunner:
         logger.success(
             "Workflow execution completed"
         )
+
+
+
+
+
