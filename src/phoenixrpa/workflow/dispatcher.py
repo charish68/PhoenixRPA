@@ -497,6 +497,7 @@ class WorkflowDispatcher:
 
             left = self.variables.resolve(left)
             right = right.strip("'").strip('"')
+            right = self.variables.resolve(right)
 
             if self.condition_evaluator.evaluate(
                 left,
@@ -554,6 +555,9 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
+
+
 
 
 
