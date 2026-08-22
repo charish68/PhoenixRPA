@@ -34,3 +34,28 @@ class BrowserExtractor:
         return await self.page.locator(selector).get_attribute(
             attribute
         )
+    async def table(
+        self,
+        selector: str,
+    ) -> list[list[str]]:
+        logger.info(
+            f"Extracting table from {selector}"
+        )
+
+        rows = await self.page.locator(
+            f"{selector} tr"
+        ).all()
+
+        table_data = []
+
+        for row in rows:
+            cells = await row.locator(
+                "th, td"
+            ).all_inner_texts()
+
+            if cells:
+                table_data.append(cells)
+
+        return table_data
+
+

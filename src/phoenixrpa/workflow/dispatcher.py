@@ -296,6 +296,52 @@ class WorkflowDispatcher:
 
             return extracted_value
 
+        elif action == "extract_table":
+            if not step.selector:
+                raise ValueError(
+                    "extract_table requires 'selector'"
+                )
+
+            if not step.value:
+                raise ValueError(
+                    "extract_table requires variable name "
+                    "in 'value'"
+                )
+
+            extracted_table = None
+
+            async def extract(selector):
+                nonlocal extracted_table
+
+                extracted_table = (
+                    await self.browser.extractor.table(
+                        selector
+                    )
+                )
+
+            await self._execute_with_healing(
+                step,
+                extract,
+            )
+
+            if extracted_table is None:
+                raise ValueError(
+                    f"Unable to extract table from "
+                    f"'{step.selector}'"
+                )
+
+            self.variables.set(
+                step.value,
+                extracted_table,
+            )
+
+            logger.success(
+                f"Extracted table into variable "
+                f"'{step.value}'"
+            )
+
+            return extracted_table
+
         elif action == "extract_html":
             extracted_html = (
                 await self.browser.extractor.html()
@@ -317,37 +363,6 @@ class WorkflowDispatcher:
                 )
 
             return extracted_html
-        elif action == "extract_attribute":
-            if not step.selector or not step.value:
-                raise ValueError(
-                    "extract_attribute requires "
-                    "'selector' and 'value'"
-                )
-
-            result = await self._execute_with_healing(
-                step,
-                lambda selector: self.browser.extractor.attribute(
-                    selector,
-                    step.value,
-                ),
-            )
-
-            if isinstance(result, dict):
-                healed_info = result
-                value = await self.browser.extractor.attribute(
-                    step.selector,
-                    step.value,
-                )
-            else:
-                healed_info = None
-                value = result
-
-            logger.info(
-                f"Extracted Attribute: {value}"
-            )
-
-            return healed_info
-
         elif action == "screenshot":
             if not step.path:
                 raise ValueError(
@@ -427,5 +442,7 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
+
 
 
