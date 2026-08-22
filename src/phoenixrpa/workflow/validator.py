@@ -1,5 +1,6 @@
 from phoenixrpa.workflow.models import Workflow, WorkflowStep
 from phoenixrpa.workflow.actions import SUPPORTED_ACTIONS
+from phoenixrpa.workflow.condition import ConditionEvaluator
 
 SUPPORTED_ACTIONS = {
     "goto",
@@ -263,17 +264,25 @@ class WorkflowValidator:
                 f"Step {index}: {action} requires "
                 f"'value'."
             )
-
+        
     def _validate_condition(
         self,
         step: WorkflowStep,
         index,
     ) -> None:
-
+    
         parts = step.condition.split()
-
+    
         if len(parts) != 3:
             raise WorkflowValidationError(
                 f"Step {index}: condition must contain "
                 f"three parts: left operator right."
+            )
+    
+        _, operator, _ = parts
+    
+        if operator not in ConditionEvaluator.OPERATORS:
+            raise WorkflowValidationError(
+                f"Step {index}: unsupported condition "
+                f"operator '{operator}'."
             )
