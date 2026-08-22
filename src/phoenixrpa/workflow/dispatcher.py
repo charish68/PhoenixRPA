@@ -370,6 +370,11 @@ class WorkflowDispatcher:
                     "in 'value'"
                 )
 
+            original_selector = step.selector
+            resolved_selector = self.variables.resolve(
+                original_selector
+            )
+
             extracted_table = None
 
             async def extract(selector):
@@ -381,15 +386,20 @@ class WorkflowDispatcher:
                     )
                 )
 
-            await self._execute_with_healing(
-                step,
-                extract,
-            )
+            step.selector = resolved_selector
+
+            try:
+                await self._execute_with_healing(
+                    step,
+                    extract,
+                )
+            finally:
+                step.selector = original_selector
 
             if extracted_table is None:
                 raise ValueError(
                     f"Unable to extract table from "
-                    f"'{step.selector}'"
+                    f"'{resolved_selector}'"
                 )
 
             self.variables.set(
@@ -403,7 +413,6 @@ class WorkflowDispatcher:
             )
 
             return extracted_table
-
         elif action == "extract_html":
             extracted_html = (
                 await self.browser.extractor.html()
@@ -504,4 +513,5 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
 
