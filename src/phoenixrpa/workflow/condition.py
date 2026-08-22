@@ -13,4 +13,9 @@ class ConditionEvaluator:
         op: str,
         right: str,
     ) -> bool:
+        if op not in self.OPERATORS:
+            raise ValueError(
+                f"Unsupported condition operator: {op}"
+            )
+
         return self.OPERATORS[op](left, right)
