@@ -478,12 +478,15 @@ class WorkflowDispatcher:
                     "screenshot requires 'path'"
                 )
 
+            resolved_path = self._resolve_value(
+                step.path
+            )
+
             await self.browser.screenshots.capture_page(
-                step.path,
+                resolved_path,
             )
 
             return None
-
         elif action == "if":
             if step.condition is None:
                 raise ValueError(
@@ -551,6 +554,7 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
 
 
 
