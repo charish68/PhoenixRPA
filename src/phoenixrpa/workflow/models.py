@@ -8,6 +8,7 @@ class WorkflowStep:
     selector: str | None = None
     value: str | None = None
     path: str | None = None
+    attribute: str | None = None
 
     timeout: int = 30000
     retries: int = 0

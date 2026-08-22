@@ -45,3 +45,10 @@ class VariableResolver:
             return resolved_date.isoformat()
 
         return value
+
+    def set(
+        self,
+        name: str,
+        value,
+    ):
+        self.variables[name] = value

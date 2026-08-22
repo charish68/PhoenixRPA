@@ -90,6 +90,7 @@ class WorkflowDispatcher:
             await action(healed)
 
             return healing_result.to_dict()
+
     def _resolve_value(self, value):
         if value is None:
             return None
@@ -216,35 +217,84 @@ class WorkflowDispatcher:
                     "extract_text requires 'selector'"
                 )
 
-            text = await self._execute_with_healing(
-                step,
-                lambda selector: self.browser.extractor.text(
-                    selector,
-                ),
+            if not step.value:
+                raise ValueError(
+                    "extract_text requires variable name in 'value'"
+                )
+
+            extracted_value = (
+                await self.browser.extractor.text(
+                    step.selector
+                )
             )
 
-            # _execute_with_healing returns healing metadata,
-            # so perform extraction separately when needed.
-            if isinstance(text, dict):
-                healed_info = text
-                extracted_text = await self.browser.extractor.text(
-                    step.selector,
-                )
-            else:
-                healed_info = None
-                extracted_text = text
+            self.variables.set(
+                step.value,
+                extracted_value,
+            )
 
             logger.info(
-                f"Extracted Text: {extracted_text}"
+                f"Extracted Text: {extracted_value}"
             )
 
-            if step.value:
-                self.variables.set(
-                    step.value,
-                    extracted_text,
+            logger.success(
+                f"Stored extracted text in variable "
+                f"'{step.value}'"
+            )
+
+            return extracted_value
+
+        elif action == "extract_attribute":
+            if not step.selector:
+                raise ValueError(
+                    "extract_attribute requires 'selector'"
                 )
 
-            return healed_info
+            if not step.attribute:
+                raise ValueError(
+                    "extract_attribute requires 'attribute'"
+                )
+
+            if not step.value:
+                raise ValueError(
+                    "extract_attribute requires variable name "
+                    "in 'value'"
+                )
+
+            extracted_value = None
+
+            async def extract(selector):
+                nonlocal extracted_value
+
+                extracted_value = (
+                    await self.browser.extractor.attribute(
+                        selector,
+                        step.attribute,
+                    )
+                )
+
+            await self._execute_with_healing(
+                step,
+                extract,
+            )
+
+            if extracted_value is None:
+                raise ValueError(
+                    f"Attribute '{step.attribute}' was not found "
+                    f"for selector '{step.selector}'"
+                )
+
+            self.variables.set(
+                step.value,
+                extracted_value,
+            )
+
+            logger.success(
+                f"Extracted attribute '{step.attribute}' "
+                f"into variable '{step.value}'"
+            )
+
+            return extracted_value
 
         elif action == "extract_html":
             html = await self.browser.extractor.html()
