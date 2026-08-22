@@ -1,0 +1,16 @@
+SUPPORTED_ACTIONS = {
+    "goto",
+    "click",
+    "fill",
+    "press",
+    "hover",
+    "wait_text",
+    "wait_url",
+    "wait_element",
+    "extract_text",
+    "extract_attribute",
+    "extract_table",
+    "extract_html",
+    "screenshot",
+    "if",
+}

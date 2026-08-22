@@ -1,5 +1,5 @@
 from phoenixrpa.workflow.models import Workflow, WorkflowStep
-
+from phoenixrpa.workflow.actions import SUPPORTED_ACTIONS
 
 SUPPORTED_ACTIONS = {
     "goto",
