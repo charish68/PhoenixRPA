@@ -35,3 +35,12 @@ def test_condition_rejects_unsupported_operator():
             ">",
             "5",
         )
+
+def test_condition_with_values_containing_spaces():
+    evaluator = ConditionEvaluator()
+
+    assert evaluator.evaluate(
+        "Login successful",
+        "==",
+        "Login successful",
+    ) is True
