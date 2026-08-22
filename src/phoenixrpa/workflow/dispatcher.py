@@ -499,7 +499,15 @@ class WorkflowDispatcher:
                     "if action requires 'condition'"
                 )
 
-            left, op, right = step.condition.split()
+            parts = step.condition.split(maxsplit=2)
+
+            if len(parts) != 3:
+                raise ValueError(
+                    "if condition must contain "
+                    "left operator right"
+                )
+
+            left, op, right = parts
 
             left = self.variables.resolve(left)
             right = right.strip("'").strip('"')
@@ -561,6 +569,8 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
+
 
 
 

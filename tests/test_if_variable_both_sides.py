@@ -47,3 +47,44 @@ async def test_if_resolves_variable_on_both_sides():
         true_step,
         branch_path="true",
     )
+
+
+@pytest.mark.asyncio
+async def test_if_condition_supports_right_side_with_spaces():
+    variables = VariableResolver()
+    variables.set("status", "Login successful")
+
+    dispatcher = WorkflowDispatcher(
+        browser=MagicMock(),
+        variables=variables,
+        db=MagicMock(),
+    )
+
+    true_step = WorkflowStep(
+        action="goto",
+        value="https://example.com/true",
+    )
+
+    false_step = WorkflowStep(
+        action="goto",
+        value="https://example.com/false",
+    )
+
+    execute_child = AsyncMock()
+
+    step = WorkflowStep(
+        action="if",
+        condition="{{status}} == 'Login successful'",
+        true_steps=[true_step],
+        false_steps=[false_step],
+    )
+
+    await dispatcher.dispatch(
+        step,
+        execute_child=execute_child,
+    )
+
+    execute_child.assert_awaited_once_with(
+        true_step,
+        branch_path="true",
+    )
