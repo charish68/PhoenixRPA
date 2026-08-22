@@ -222,14 +222,14 @@ class WorkflowDispatcher:
                     "wait_element requires 'selector'"
                 )
 
-            return await self._execute_with_healing(
-                step,
-                lambda selector: self.browser.waits.element(
-                    selector,
-                    timeout=step.timeout,
-                ),
+            resolved_selector = self._resolve_value(
+                step.selector
             )
 
+            return await self.browser.waits.element(
+                resolved_selector,
+                timeout=step.timeout,
+            )
         elif action == "extract_text":
             if not step.selector:
                 raise ValueError(
@@ -461,6 +461,7 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
 
 
 
