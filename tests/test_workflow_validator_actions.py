@@ -48,3 +48,27 @@ def test_supported_actions_match_dispatcher_actions():
     }
 
     assert SUPPORTED_ACTIONS == expected_actions
+import pytest
+
+from phoenixrpa.workflow.models import Workflow, WorkflowStep
+from phoenixrpa.workflow.validator import (
+    WorkflowValidationError,
+    WorkflowValidator,
+)
+
+
+def test_validator_rejects_unsupported_condition_operator():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status > success",
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="unsupported condition operator",
+    ):
+        WorkflowValidator().validate(workflow)
