@@ -314,6 +314,13 @@ class WorkflowDispatcher:
                     "in 'value'"
                 )
 
+            resolved_selector = self._resolve_value(
+                step.selector
+            )
+
+            original_selector = step.selector
+            step.selector = resolved_selector
+
             extracted_value = None
 
             async def extract(selector):
@@ -326,15 +333,18 @@ class WorkflowDispatcher:
                     )
                 )
 
-            await self._execute_with_healing(
-                step,
-                extract,
-            )
+            try:
+                await self._execute_with_healing(
+                    step,
+                    extract,
+                )
+            finally:
+                step.selector = original_selector
 
             if extracted_value is None:
                 raise ValueError(
                     f"Attribute '{step.attribute}' was not found "
-                    f"for selector '{step.selector}'"
+                    f"for selector '{resolved_selector}'"
                 )
 
             self.variables.set(
@@ -348,7 +358,6 @@ class WorkflowDispatcher:
             )
 
             return extracted_value
-
         elif action == "extract_table":
             if not step.selector:
                 raise ValueError(
@@ -495,3 +504,4 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
