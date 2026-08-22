@@ -9,10 +9,13 @@ SUPPORTED_ACTIONS = {
     "hover",
     "wait_element",
     "wait_url",
+    "wait_text",
     "extract_text",
     "extract_html",
     "extract_attribute",
     "screenshot",
+    "wait_text",
+    "extract_table",
     "if",
 }
 
@@ -49,7 +52,7 @@ class WorkflowValidator:
     def _validate_step(
         self,
         step: WorkflowStep,
-        index: int,
+        index,
     ) -> None:
 
         # --------------------------------------------------
@@ -158,6 +161,14 @@ class WorkflowValidator:
                 step,
                 index,
                 "wait_url",
+            )
+
+        elif action == "wait_text":
+
+            self._require_value(
+                step,
+                index,
+                "wait_text",
             )
 
         elif action == "extract_text":
