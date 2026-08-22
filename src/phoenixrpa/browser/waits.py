@@ -30,3 +30,21 @@ class BrowserWaits:
             url,
             timeout=timeout,
         )
+    async def text(
+        self,
+        text: str,
+        timeout: int = 30000,
+    ):
+        logger.info(
+            f"Waiting for text '{text}'"
+        )
+
+        await self.page.get_by_text(
+            text,
+            exact=False,
+        ).wait_for(
+            state="visible",
+            timeout=timeout,
+        )
+
+
