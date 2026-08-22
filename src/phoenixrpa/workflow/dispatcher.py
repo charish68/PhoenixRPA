@@ -6,6 +6,7 @@ from phoenixrpa.services.workflow_service import WorkflowService
 from phoenixrpa.workflow.condition import ConditionEvaluator
 from phoenixrpa.workflow.models import WorkflowStep
 from phoenixrpa.workflow.variables import VariableResolver
+from phoenixrpa.workflow.actions import SUPPORTED_ACTIONS
 
 
 class WorkflowDispatcher:
@@ -104,6 +105,11 @@ class WorkflowDispatcher:
         branch_path: str | None = None,
     ):
         action = step.action.lower()
+
+        if action not in SUPPORTED_ACTIONS:
+            raise ValueError(
+            f"Unsupported workflow action: {step.action}"
+        )
 
         if action == "goto":
             if not step.value:
@@ -555,6 +561,8 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
+
 
 
 
