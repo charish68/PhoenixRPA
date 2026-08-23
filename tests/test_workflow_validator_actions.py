@@ -116,3 +116,47 @@ def test_supported_actions_are_immutable():
         SUPPORTED_ACTIONS,
         frozenset,
     )
+
+@pytest.mark.parametrize(
+    "timeout",
+    [
+        0,
+        -1,
+    ],
+)
+def test_validator_rejects_invalid_timeout(
+    timeout,
+):
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="goto",
+                value="https://example.com",
+                timeout=timeout,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="timeout must be greater than 0",
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+def test_validator_rejects_negative_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="goto",
+                value="https://example.com",
+                retries=-1,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="retries cannot be negative",
+    ):
+        WorkflowValidator().validate(workflow)
