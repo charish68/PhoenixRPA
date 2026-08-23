@@ -212,6 +212,16 @@ class HealingService:
                     "placeholder"
                 )
 
+                # Skip hidden elements
+                try:
+                    is_visible = await element.is_visible()
+
+                    if is_visible is False:
+                        continue
+
+                except Exception:
+                    pass
+
                 # ------------------------------------------------
                 # Build stable selector
                 # ------------------------------------------------
@@ -432,3 +442,5 @@ class HealingService:
             )
 
         return None
+
+
