@@ -97,3 +97,25 @@ def test_resolves_tomorrow_minus_days():
     assert result == (
         date.today() - timedelta(days=2)
     ).isoformat()
+
+def test_resolves_embedded_variable():
+    resolver = VariableResolver()
+    resolver.set("name", "Rahul")
+
+    result = resolver.resolve(
+        "Hello {{name}}"
+    )
+
+    assert result == "Hello Rahul"
+
+
+def test_resolves_multiple_embedded_variables():
+    resolver = VariableResolver()
+    resolver.set("first_name", "Rahul")
+    resolver.set("last_name", "Kumar")
+
+    result = resolver.resolve(
+        "{{first_name}} {{last_name}}"
+    )
+
+    assert result == "Rahul Kumar"
