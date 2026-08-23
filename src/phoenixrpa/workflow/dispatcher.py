@@ -415,7 +415,7 @@ class WorkflowDispatcher:
                 )
 
             original_selector = step.selector
-            resolved_selector = self.variables.resolve(
+            resolved_selector = self._resolve_value(
                 original_selector
             )
 
@@ -583,6 +583,7 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
 
 
 
