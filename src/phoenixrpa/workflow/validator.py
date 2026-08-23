@@ -270,20 +270,12 @@ class WorkflowValidator:
         step: WorkflowStep,
         index,
     ) -> None:
-    
-        parts = step.condition.split(maxsplit=2)
-    
-        if len(parts) != 3:
-            raise WorkflowValidationError(
-                f"Step {index}: condition must contain "
-                f"three parts: left operator right."
-            )
-    
-        _, operator, _ = parts
-    
-        if operator not in ConditionEvaluator.OPERATORS:
-            raise WorkflowValidationError(
-                f"Step {index}: unsupported condition "
-                f"operator '{operator}'."
-            )
 
+        try:
+            ConditionEvaluator().parse(
+                step.condition
+            )
+        except ValueError as error:
+            raise WorkflowValidationError(
+                f"Step {index}: {error}"
+            ) from error
