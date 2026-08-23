@@ -104,7 +104,7 @@ class WorkflowDispatcher:
         execute_child=None,
         branch_path: str | None = None,
     ):
-        action = step.action.lower()
+        action = step.action.strip().lower()
 
         if action not in SUPPORTED_ACTIONS:
             raise ValueError(
@@ -583,6 +583,7 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
 
 
 
