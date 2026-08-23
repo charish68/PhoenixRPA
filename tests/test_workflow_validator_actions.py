@@ -108,3 +108,11 @@ def test_validator_rejects_malformed_conditions(
         match="Condition must contain left operator right",
     ):
         WorkflowValidator().validate(workflow)
+
+def test_supported_actions_are_immutable():
+    from phoenixrpa.workflow.actions import SUPPORTED_ACTIONS
+
+    assert isinstance(
+        SUPPORTED_ACTIONS,
+        frozenset,
+    )
