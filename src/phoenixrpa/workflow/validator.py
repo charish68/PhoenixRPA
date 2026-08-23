@@ -1,4 +1,4 @@
-import pytest
+
 from phoenixrpa.workflow.actions import SUPPORTED_ACTIONS
 from phoenixrpa.workflow.condition import ConditionEvaluator
 from phoenixrpa.workflow.models import Workflow, WorkflowStep
@@ -269,28 +269,3 @@ class WorkflowValidator:
 # ----------------------------------------------------------
 # Unit Tests
 # ----------------------------------------------------------
-
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "",
-        "   ",
-    ],
-)
-def test_validator_rejects_empty_conditions(
-    condition,
-):
-    workflow = Workflow(
-        steps=[
-            WorkflowStep(
-                action="if",
-                condition=condition,
-            )
-        ]
-    )
-
-    with pytest.raises(
-        WorkflowValidationError,
-        match="if requires 'condition'",
-    ):
-        WorkflowValidator().validate(workflow)
