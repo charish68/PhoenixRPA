@@ -83,3 +83,28 @@ def test_validator_accepts_condition_with_spaced_right_value():
     )
 
     WorkflowValidator().validate(workflow)
+@pytest.mark.parametrize(
+    "condition",
+    [
+        "status",
+        "status ==",
+        "== success",
+    ],
+)
+def test_validator_rejects_malformed_conditions(
+    condition,
+):
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition=condition,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="Condition must contain left operator right",
+    ):
+        WorkflowValidator().validate(workflow)
