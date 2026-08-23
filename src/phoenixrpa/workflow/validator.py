@@ -1,23 +1,7 @@
-from phoenixrpa.workflow.models import Workflow, WorkflowStep
+import pytest
 from phoenixrpa.workflow.actions import SUPPORTED_ACTIONS
 from phoenixrpa.workflow.condition import ConditionEvaluator
-
-SUPPORTED_ACTIONS = {
-    "goto",
-    "click",
-    "fill",
-    "press",
-    "hover",
-    "wait_text",
-    "wait_url",
-    "wait_element",
-    "extract_text",
-    "extract_attribute",
-    "extract_table",
-    "extract_html",
-    "screenshot",
-    "if",
-}
+from phoenixrpa.workflow.models import Workflow, WorkflowStep
 
 
 class WorkflowValidationError(ValueError):
@@ -27,12 +11,10 @@ class WorkflowValidationError(ValueError):
 class WorkflowValidator:
 
     def validate(self, workflow: Workflow) -> None:
-        """
-        Validate the complete workflow.
+        """Validate the complete workflow.
 
         Raises:
-            WorkflowValidationError:
-                If any workflow step is invalid.
+            WorkflowValidationError: If any workflow step is invalid.
         """
 
         if not workflow.steps:
@@ -203,7 +185,10 @@ class WorkflowValidator:
 
         elif action == "if":
 
-            if not step.condition:
+            if (
+                step.condition is None
+                or not step.condition.strip()
+            ):
                 raise WorkflowValidationError(
                     f"Step {index}: if requires "
                     f"'condition'."
@@ -264,7 +249,7 @@ class WorkflowValidator:
                 f"Step {index}: {action} requires "
                 f"'value'."
             )
-        
+
     def _validate_condition(
         self,
         step: WorkflowStep,
@@ -279,3 +264,33 @@ class WorkflowValidator:
             raise WorkflowValidationError(
                 f"Step {index}: {error}"
             ) from error
+
+
+# ----------------------------------------------------------
+# Unit Tests
+# ----------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "condition",
+    [
+        "",
+        "   ",
+    ],
+)
+def test_validator_rejects_empty_conditions(
+    condition,
+):
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition=condition,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="if requires 'condition'",
+    ):
+        WorkflowValidator().validate(workflow)
