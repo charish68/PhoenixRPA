@@ -108,8 +108,8 @@ class WorkflowDispatcher:
 
         if action not in SUPPORTED_ACTIONS:
             raise ValueError(
-            f"Unsupported workflow action: {step.action}"
-        )
+                f"Unsupported workflow action: {step.action}"
+            )
 
         if action == "goto":
             if not step.value:
@@ -583,6 +583,7 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
 
 
 
