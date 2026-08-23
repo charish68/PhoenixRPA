@@ -232,7 +232,7 @@ class WorkflowDispatcher:
                     "wait_text requires 'value'"
                 )
 
-            resolved_value = self.variables.resolve(
+            resolved_value = self._resolve_value(
                 step.value
             )
 
@@ -249,7 +249,7 @@ class WorkflowDispatcher:
                     "wait_url requires 'value'"
                 )
 
-            resolved_value = self.variables.resolve(
+            resolved_value = self._resolve_value(
                 step.value
             )
 
@@ -583,6 +583,7 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
 
 
 
