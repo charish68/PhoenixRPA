@@ -160,3 +160,16 @@ def test_validator_rejects_negative_retries():
         match="retries cannot be negative",
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_normalizes_action_name():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="  CLICK  ",
+                selector="#submit",
+            )
+        ]
+    )
+
+    WorkflowValidator().validate(workflow)
+
