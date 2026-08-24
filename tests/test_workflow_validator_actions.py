@@ -206,3 +206,20 @@ def test_validator_rejects_whitespace_only_action():
         match="action is required",
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_rejects_non_numeric_timeout():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="goto",
+                value="https://example.com",
+                timeout="30000",
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="timeout must be a number",
+    ):
+        WorkflowValidator().validate(workflow)
