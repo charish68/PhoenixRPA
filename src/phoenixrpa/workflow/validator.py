@@ -79,6 +79,11 @@ class WorkflowValidator:
         # Retries
         # --------------------------------------------------
 
+        if not isinstance(step.retries, (int, float)):
+            raise WorkflowValidationError(
+                f"Step {index}: retries must be a number."
+            )
+
         if step.retries < 0:
             raise WorkflowValidationError(
                 f"Step {index}: retries cannot be negative."
@@ -280,6 +285,7 @@ class WorkflowValidator:
 # ----------------------------------------------------------
 # Unit Tests
 # ----------------------------------------------------------
+
 
 
 

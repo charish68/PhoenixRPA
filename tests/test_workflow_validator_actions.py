@@ -223,3 +223,20 @@ def test_validator_rejects_non_numeric_timeout():
         match="timeout must be a number",
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_rejects_non_numeric_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="goto",
+                value="https://example.com",
+                retries="2",
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="retries must be a number",
+    ):
+        WorkflowValidator().validate(workflow)
