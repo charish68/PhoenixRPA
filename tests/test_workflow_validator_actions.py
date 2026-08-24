@@ -175,3 +175,19 @@ def test_validator_normalizes_action_name():
 
 
 
+
+def test_validator_rejects_non_string_action():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action=123,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="action must be a string",
+    ):
+        WorkflowValidator().validate(workflow)
+
