@@ -64,7 +64,10 @@ class WorkflowValidator:
         # Timeout
         # --------------------------------------------------
 
-        if not isinstance(step.timeout, (int, float)):
+        if (
+            isinstance(step.timeout, bool)
+            or not isinstance(step.timeout, (int, float))
+        ):
             raise WorkflowValidationError(
                 f"Step {index}: timeout must be a number."
             )
@@ -285,6 +288,7 @@ class WorkflowValidator:
 # ----------------------------------------------------------
 # Unit Tests
 # ----------------------------------------------------------
+
 
 
 
