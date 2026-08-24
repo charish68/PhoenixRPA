@@ -1,4 +1,6 @@
 
+from math import isfinite
+
 from phoenixrpa.workflow.actions import SUPPORTED_ACTIONS
 from phoenixrpa.workflow.condition import ConditionEvaluator
 from phoenixrpa.workflow.models import Workflow, WorkflowStep
@@ -70,6 +72,11 @@ class WorkflowValidator:
         ):
             raise WorkflowValidationError(
                 f"Step {index}: timeout must be a number."
+            )
+
+        if not isfinite(step.timeout):
+            raise WorkflowValidationError(
+                f"Step {index}: timeout must be a valid number."
             )
 
         if step.timeout <= 0:
@@ -291,6 +298,7 @@ class WorkflowValidator:
 # ----------------------------------------------------------
 # Unit Tests
 # ----------------------------------------------------------
+
 
 
 
