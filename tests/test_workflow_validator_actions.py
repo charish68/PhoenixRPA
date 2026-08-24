@@ -306,3 +306,37 @@ def test_validator_rejects_nan_timeout():
         match="timeout must be a valid number",
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_rejects_nan_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="goto",
+                value="https://example.com",
+                retries=float("nan"),
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="retries must be a valid number",
+    ):
+        WorkflowValidator().validate(workflow)
+
+def test_validator_rejects_nan_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="goto",
+                value="https://example.com",
+                retries=float("nan"),
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="retries must be a valid number",
+    ):
+        WorkflowValidator().validate(workflow)

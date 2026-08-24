@@ -97,6 +97,11 @@ class WorkflowValidator:
                 f"Step {index}: retries must be a number."
             )
 
+        if not isfinite(step.retries):
+            raise WorkflowValidationError(
+                f"Step {index}: retries must be a valid number."
+            )
+
         if step.retries < 0:
             raise WorkflowValidationError(
                 f"Step {index}: retries cannot be negative."
@@ -298,6 +303,7 @@ class WorkflowValidator:
 # ----------------------------------------------------------
 # Unit Tests
 # ----------------------------------------------------------
+
 
 
 
