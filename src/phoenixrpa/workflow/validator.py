@@ -47,6 +47,7 @@ class WorkflowValidator:
             )
 
         action = step.action.strip().lower()
+        step.action = action
 
         if action not in SUPPORTED_ACTIONS:
             raise WorkflowValidationError(
