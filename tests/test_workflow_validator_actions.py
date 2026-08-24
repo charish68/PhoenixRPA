@@ -237,7 +237,7 @@ def test_validator_rejects_non_numeric_retries():
 
     with pytest.raises(
         WorkflowValidationError,
-        match="retries must be a number",
+        match="retries must be an integer",
     ):
         WorkflowValidator().validate(workflow)
 
@@ -270,7 +270,7 @@ def test_validator_rejects_boolean_retries():
 
     with pytest.raises(
         WorkflowValidationError,
-        match="retries must be a number",
+        match="retries must be an integer",
     ):
         WorkflowValidator().validate(workflow)
 def test_validator_rejects_boolean_retries():
@@ -286,7 +286,7 @@ def test_validator_rejects_boolean_retries():
 
     with pytest.raises(
         WorkflowValidationError,
-        match="retries must be a number",
+        match="retries must be an integer",
     ):
         WorkflowValidator().validate(workflow)                
 
@@ -320,7 +320,7 @@ def test_validator_rejects_nan_retries():
 
     with pytest.raises(
         WorkflowValidationError,
-        match="retries must be a valid number",
+        match="retries must be an integer",
     ):
         WorkflowValidator().validate(workflow)
 
@@ -337,6 +337,24 @@ def test_validator_rejects_nan_retries():
 
     with pytest.raises(
         WorkflowValidationError,
-        match="retries must be a valid number",
+        match="retries must be an integer",
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_rejects_fractional_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="goto",
+                value="https://example.com",
+                retries=1.5,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="retries must be an integer",
+    ):
+        WorkflowValidator().validate(workflow)
+
