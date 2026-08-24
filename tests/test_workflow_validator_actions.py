@@ -257,3 +257,35 @@ def test_validator_rejects_boolean_timeout():
         match="timeout must be a number",
     ):
         WorkflowValidator().validate(workflow)
+def test_validator_rejects_boolean_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="goto",
+                value="https://example.com",
+                retries=True,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="retries must be a number",
+    ):
+        WorkflowValidator().validate(workflow)
+def test_validator_rejects_boolean_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="goto",
+                value="https://example.com",
+                retries=True,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="retries must be a number",
+    ):
+        WorkflowValidator().validate(workflow)                
