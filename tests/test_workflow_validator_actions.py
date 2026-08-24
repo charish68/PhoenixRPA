@@ -220,7 +220,7 @@ def test_validator_rejects_non_numeric_timeout():
 
     with pytest.raises(
         WorkflowValidationError,
-        match="timeout must be a number",
+        match="timeout must be an integer",
     ):
         WorkflowValidator().validate(workflow)
 
@@ -254,7 +254,7 @@ def test_validator_rejects_boolean_timeout():
 
     with pytest.raises(
         WorkflowValidationError,
-        match="timeout must be a number",
+        match="timeout must be an integer",
     ):
         WorkflowValidator().validate(workflow)
 def test_validator_rejects_boolean_retries():
@@ -303,7 +303,7 @@ def test_validator_rejects_nan_timeout():
 
     with pytest.raises(
         WorkflowValidationError,
-        match="timeout must be a valid number",
+        match="timeout must be an integer",
     ):
         WorkflowValidator().validate(workflow)
 
@@ -355,6 +355,24 @@ def test_validator_rejects_fractional_retries():
     with pytest.raises(
         WorkflowValidationError,
         match="retries must be an integer",
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+def test_validator_rejects_fractional_timeout():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="goto",
+                value="https://example.com",
+                timeout=1500.5,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="timeout must be an integer",
     ):
         WorkflowValidator().validate(workflow)
 
