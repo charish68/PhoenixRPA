@@ -46,7 +46,7 @@ class WorkflowValidator:
                 f"Step {index}: action must be a string."
             )
 
-        if not step.action:
+        if not step.action.strip():
             raise WorkflowValidationError(
                 f"Step {index}: action is required."
             )
@@ -275,4 +275,5 @@ class WorkflowValidator:
 # ----------------------------------------------------------
 # Unit Tests
 # ----------------------------------------------------------
+
 

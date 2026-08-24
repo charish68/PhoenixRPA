@@ -191,3 +191,18 @@ def test_validator_rejects_non_string_action():
     ):
         WorkflowValidator().validate(workflow)
 
+
+def test_validator_rejects_whitespace_only_action():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="   ",
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="action is required",
+    ):
+        WorkflowValidator().validate(workflow)
