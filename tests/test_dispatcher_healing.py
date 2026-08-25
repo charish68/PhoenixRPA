@@ -64,3 +64,65 @@ async def test_dispatcher_returns_healing_metadata():
         "#userEmail",
         return_result=True,
     )
+
+@pytest.mark.asyncio
+async def test_dispatcher_restores_variable_selector_after_healing():
+
+    browser = MagicMock()
+    variables = MagicMock()
+    db = MagicMock()
+
+    variables.resolve.side_effect = (
+        lambda value: "#userEmail"
+        if value == "{{email_selector}}"
+        else value
+    )
+
+    dispatcher = WorkflowDispatcher(
+        browser=browser,
+        variables=variables,
+        db=db,
+    )
+
+    step = WorkflowStep(
+        action="click",
+        selector="{{email_selector}}",
+        step_order=1,
+    )
+
+    dispatcher.browser.actions.click = AsyncMock(
+        side_effect=[
+            RuntimeError("original selector failed"),
+            None,
+        ]
+    )
+
+    healing_result = HealingResult(
+        status="HEALED",
+        original_selector="#userEmail",
+        healed_selector="#emailInputChanged",
+        method="AI",
+    )
+
+    dispatcher.browser.healer.find_best_selector = AsyncMock(
+        return_value=healing_result,
+    )
+
+    result = await dispatcher.dispatch(step)
+
+    assert result is not None
+    assert result["healed_selector"] == "#emailInputChanged"
+
+    assert step.selector == "{{email_selector}}"
+
+    assert dispatcher.browser.actions.click.await_count == 2
+
+    dispatcher.browser.actions.click.assert_any_await(
+        "#userEmail",
+        timeout=step.timeout,
+    )
+
+    dispatcher.browser.actions.click.assert_any_await(
+        "#emailInputChanged",
+        timeout=step.timeout,
+    )
