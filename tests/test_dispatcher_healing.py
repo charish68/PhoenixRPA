@@ -126,3 +126,40 @@ async def test_dispatcher_restores_variable_selector_after_healing():
         "#emailInputChanged",
         timeout=step.timeout,
     )
+
+@pytest.mark.asyncio
+async def test_dispatcher_restores_selector_when_action_fails():
+
+    browser = MagicMock()
+    variables = MagicMock()
+    db = MagicMock()
+
+    variables.resolve.side_effect = (
+        lambda value: "#resolvedButton"
+        if value == "{{button}}"
+        else value
+    )
+
+    dispatcher = WorkflowDispatcher(
+        browser=browser,
+        variables=variables,
+        db=db,
+    )
+
+    step = WorkflowStep(
+        action="click",
+        selector="{{button}}",
+    )
+
+    dispatcher.browser.actions.click = AsyncMock(
+        side_effect=RuntimeError("click failed")
+    )
+
+    dispatcher.browser.healer.find_best_selector = AsyncMock(
+        return_value=None
+    )
+
+    with pytest.raises(RuntimeError, match="click failed"):
+        await dispatcher.dispatch(step)
+
+    assert step.selector == "{{button}}"
