@@ -94,3 +94,43 @@ async def test_run_step_retries_with_resolved_values():
     assert step.selector == "{{button}}"
     assert step.value == "{{message}}"
 
+
+@pytest.mark.asyncio
+async def test_run_step_restores_original_values_after_retries_fail():
+
+    browser = MagicMock()
+    db = MagicMock()
+
+    runner = WorkflowRunner(
+        browser=browser,
+        variables={
+            "button": "#loginButton",
+            "message": "Hello",
+            "file_path": "screenshots/test.png",
+        },
+        db=db,
+    )
+
+    step = WorkflowStep(
+        action="fill",
+        selector="{{button}}",
+        value="{{message}}",
+        path="{{file_path}}",
+        retries=1,
+    )
+
+    runner.dispatcher.dispatch = AsyncMock(
+        side_effect=RuntimeError("persistent failure")
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="persistent failure",
+    ):
+        await runner.run_step(step)
+
+    assert runner.dispatcher.dispatch.await_count == 2
+
+    assert step.selector == "{{button}}"
+    assert step.value == "{{message}}"
+    assert step.path == "{{file_path}}"
