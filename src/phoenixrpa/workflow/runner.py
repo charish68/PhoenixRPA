@@ -172,7 +172,7 @@ class WorkflowRunner:
                     # The child owns the failure.
                     # --------------------------------------------------
 
-                    if step.action.lower() != "if":
+                    if step.action.strip().lower() != "if":
 
                         screenshot_path = None
 
@@ -298,6 +298,7 @@ class WorkflowRunner:
         logger.success(
             "Workflow execution completed"
         )
+
 
 
 

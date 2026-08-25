@@ -162,3 +162,47 @@ async def test_runner_records_healing_after_retry():
     runner.execution_service.finish_step.assert_called_once()
 
     runner.execution_service.fail_step.assert_not_called()
+
+@pytest.mark.asyncio
+async def test_runner_treats_normalized_if_action_as_success_after_child_failure():
+    dispatcher = MagicMock()
+
+    dispatcher.dispatch = AsyncMock(
+        side_effect=RuntimeError("child step failed")
+    )
+
+    runner = WorkflowRunner(
+        browser=MagicMock(),
+        db=MagicMock(),
+    )
+
+    runner.dispatcher = dispatcher
+    runner.execution_service = MagicMock()
+    runner.run_id = 1
+
+    step = WorkflowStep(
+        action=" IF ",
+        retries=0,
+        timeout=30000,
+        job_id=16,
+        step_order=1,
+    )
+
+    log = MagicMock()
+
+    runner.execution_service.start_step.return_value = log
+
+    with pytest.raises(
+        RuntimeError,
+        match="child step failed",
+    ):
+        await runner.run_step(
+            step,
+            log_execution=True,
+        )
+
+    runner.execution_service.finish_step.assert_called_once_with(
+        log
+    )
+
+    runner.execution_service.fail_step.assert_not_called()
