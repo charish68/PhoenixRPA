@@ -102,3 +102,63 @@ async def test_runner_records_healing_method():
         healing_method="AI",
     healing_confidence=None,
     )
+@pytest.mark.asyncio
+async def test_runner_records_healing_after_retry():
+
+    dispatcher = MagicMock()
+
+    dispatcher.dispatch = AsyncMock(
+        side_effect=[
+            RuntimeError("temporary failure"),
+            {
+                "status": "HEALED",
+                "original_selector": "#userEmail",
+                "healed_selector": "#emailInputChanged",
+                "method": "AI",
+                "confidence": 1.0,
+            },
+        ]
+    )
+
+    runner = WorkflowRunner(
+        browser=MagicMock(),
+        db=MagicMock(),
+    )
+
+    runner.dispatcher = dispatcher
+    runner.execution_service = MagicMock()
+    runner.run_id = 1
+
+    step = WorkflowStep(
+        action="click",
+        selector="#userEmail",
+        retries=1,
+        timeout=30000,
+        job_id=16,
+        step_order=1,
+    )
+
+    log = MagicMock()
+
+    runner.execution_service.start_step.return_value = log
+
+    await runner.run_step(
+        step,
+        log_execution=True,
+    )
+
+    assert dispatcher.dispatch.await_count == 2
+
+    runner.execution_service.start_step.assert_called_once()
+
+    runner.execution_service.mark_step_healed.assert_called_once_with(
+        log,
+        "#userEmail",
+        "#emailInputChanged",
+        healing_method="AI",
+        healing_confidence=1.0,
+    )
+
+    runner.execution_service.finish_step.assert_called_once()
+
+    runner.execution_service.fail_step.assert_not_called()
