@@ -1116,3 +1116,66 @@ def test_validator_rejects_empty_nested_screenshot_paths(path):
         match=r"screenshot requires 'path'",
     ):
         WorkflowValidator().validate(workflow)
+
+@pytest.mark.parametrize(
+    "timeout",
+    [
+        0,
+        -1,
+        True,
+    ],
+)
+def test_validator_rejects_invalid_nested_true_step_timeout(timeout):
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="click",
+                        selector="#submit",
+                        timeout=timeout,
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1\.true\.1: timeout",
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+@pytest.mark.parametrize(
+    "retries",
+    [
+        -1,
+        True,
+    ],
+)
+def test_validator_rejects_invalid_nested_false_step_retries(retries):
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                false_steps=[
+                    WorkflowStep(
+                        action="click",
+                        selector="#submit",
+                        retries=retries,
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1\.false\.1: retries",
+    ):
+        WorkflowValidator().validate(workflow)
+
