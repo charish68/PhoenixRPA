@@ -11,6 +11,17 @@ class ConditionEvaluator:
         self,
         condition: str,
     ) -> tuple[str, str, str]:
+
+        operator_count = sum(
+            condition.count(operator_symbol)
+            for operator_symbol in self.OPERATORS
+        )
+
+        if operator_count > 1:
+            raise ValueError(
+                "Condition must contain exactly one operator."
+            )
+
         for operator_symbol in self.OPERATORS:
             if operator_symbol in condition:
                 left, right = condition.split(

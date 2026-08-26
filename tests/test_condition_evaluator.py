@@ -83,3 +83,21 @@ def test_condition_parse_rejects_malformed_conditions(
 
     with pytest.raises(ValueError):
         evaluator.parse(condition)
+
+@pytest.mark.parametrize(
+    "condition",
+    [
+        "status == success == pending",
+        "status != success != pending",
+    ],
+)
+def test_condition_parse_rejects_repeated_operators(
+    condition,
+):
+    evaluator = ConditionEvaluator()
+
+    with pytest.raises(
+        ValueError,
+        match="Condition must contain exactly one operator",
+    ):
+        evaluator.parse(condition)
