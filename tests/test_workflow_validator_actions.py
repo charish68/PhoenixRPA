@@ -409,3 +409,46 @@ def test_validator_rejects_repeated_not_equal_operators():
         match="Condition must contain exactly one operator",
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_reports_invalid_true_branch_child_path():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="invalid_action",
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1\.true\.1: unsupported action 'invalid_action'",
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+def test_validator_reports_invalid_false_branch_child_path():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status == success",
+                false_steps=[
+                    WorkflowStep(
+                        action="invalid_action",
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1\.false\.1: unsupported action 'invalid_action'",
+    ):
+        WorkflowValidator().validate(workflow)
