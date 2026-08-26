@@ -1063,3 +1063,56 @@ def test_validator_rejects_empty_nested_selectors(
         match=rf"Step {expected_path}: {nested_action} requires 'selector'",
     ):
         WorkflowValidator().validate(workflow)
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "",
+        "   ",
+    ],
+)
+def test_validator_rejects_empty_screenshot_paths(path):
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="screenshot",
+                path=path,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"screenshot requires 'path'",
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "",
+        "   ",
+    ],
+)
+def test_validator_rejects_empty_nested_screenshot_paths(path):
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="screenshot",
+                        path=path,
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"screenshot requires 'path'",
+    ):
+        WorkflowValidator().validate(workflow)
