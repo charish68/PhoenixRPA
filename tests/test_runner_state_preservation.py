@@ -120,3 +120,44 @@ async def test_runner_restores_original_step_values_after_failure(monkeypatch):
 
 
 
+
+@pytest.mark.asyncio
+async def test_runner_stops_after_top_level_step_failure():
+    browser = Mock()
+    db = Mock()
+
+    runner = WorkflowRunner(
+        browser=browser,
+        db=db,
+    )
+
+    first_step = WorkflowStep(
+        action="click",
+        selector="#first",
+    )
+
+    second_step = WorkflowStep(
+        action="click",
+        selector="#second",
+    )
+
+    workflow = Workflow(
+        steps=[
+            first_step,
+            second_step,
+        ]
+    )
+
+    dispatch = AsyncMock(
+        side_effect=RuntimeError("First step failed")
+    )
+
+    runner.dispatcher.dispatch = dispatch
+
+    with pytest.raises(
+        RuntimeError,
+        match="First step failed",
+    ):
+        await runner.run(workflow)
+
+    assert dispatch.await_count == 1
