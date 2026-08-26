@@ -452,3 +452,33 @@ def test_validator_reports_invalid_false_branch_child_path():
         match=r"Step 1\.false\.1: unsupported action 'invalid_action'",
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_reports_deep_nested_branch_path():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="if",
+                        condition="result == failed",
+                        false_steps=[
+                            WorkflowStep(
+                                action="click",
+                            )
+                        ],
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=(
+            r"Step 1\.true\.1\.false\.1: "
+            r"click requires 'selector'"
+        ),
+    ):
+        WorkflowValidator().validate(workflow)
