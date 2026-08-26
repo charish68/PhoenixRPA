@@ -51,3 +51,23 @@ async def test_if_executes_true_branch():
         true_step,
         branch_path="true",
     )
+
+@pytest.mark.asyncio
+async def test_if_rejects_empty_condition():
+    dispatcher = WorkflowDispatcher(
+        browser=MagicMock(),
+        variables=VariableResolver(),
+        db=MagicMock(),
+    )
+
+    step = WorkflowStep(
+        action="if",
+        condition="",
+        timeout=30000,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="if action requires 'condition'",
+    ):
+        await dispatcher.dispatch(step)

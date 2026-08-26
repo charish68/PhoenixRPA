@@ -494,7 +494,7 @@ class WorkflowDispatcher:
 
             return None
         elif action == "if":
-            if step.condition is None:
+            if not step.condition or not step.condition.strip():
                 raise ValueError(
                     "if action requires 'condition'"
                 )
@@ -566,6 +566,7 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
 
 
 
