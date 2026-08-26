@@ -588,3 +588,28 @@ def test_validator_reports_nested_child_boolean_retries():
         ),
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_reports_nested_invalid_condition_path():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="if",
+                        condition="invalid_condition",
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=(
+            r"Step 1\.true\.1: "
+            r"Condition must contain left operator right"
+        ),
+    ):
+        WorkflowValidator().validate(workflow)
