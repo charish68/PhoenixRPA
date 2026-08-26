@@ -1293,3 +1293,60 @@ def test_validator_accepts_valid_nested_false_step_timeout_and_retries():
 
     WorkflowValidator().validate(workflow)
 
+
+def test_validator_reports_deep_nested_validation_path():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="if",
+                        condition="status == status",
+                        false_steps=[
+                            WorkflowStep(
+                                action="click",
+                                selector="   ",
+                            )
+                        ],
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1\.true\.1\.false\.1: click requires 'selector'",
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+def test_validator_reports_deep_nested_unsupported_action_path():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="if",
+                        condition="status == status",
+                        true_steps=[
+                            WorkflowStep(
+                                action="invalid_action",
+                            )
+                        ],
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1\.true\.1\.true\.1: unsupported action",
+    ):
+        WorkflowValidator().validate(workflow)
+
