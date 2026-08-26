@@ -296,3 +296,44 @@ async def test_runner_enables_execution_logging_for_top_level_steps():
         ]
     )
 
+
+@pytest.mark.asyncio
+async def test_runner_does_not_log_completion_after_failure(monkeypatch):
+    browser = Mock()
+    db = Mock()
+
+    runner = WorkflowRunner(
+        browser=browser,
+        db=db,
+    )
+
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="click",
+                selector="#first",
+            )
+        ]
+    )
+
+    async def fail_run_step(*args, **kwargs):
+        raise RuntimeError("Step failed")
+
+    runner.run_step = AsyncMock(
+        side_effect=fail_run_step
+    )
+
+    success_log = Mock()
+
+    monkeypatch.setattr(
+        "phoenixrpa.workflow.runner.logger.success",
+        success_log,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Step failed",
+    ):
+        await runner.run(workflow)
+
+    success_log.assert_not_called()
