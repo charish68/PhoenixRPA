@@ -294,6 +294,11 @@ class WorkflowValidator:
                 f"'value'."
             )
 
+        if not isinstance(step.value, str):
+            raise WorkflowValidationError(
+                f"Step {index}: value must be a string."
+            )
+
     def _validate_condition(
         self,
         step: WorkflowStep,
