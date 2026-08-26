@@ -1,3 +1,5 @@
+from math import isfinite
+
 from phoenixrpa.workflow.actions import SUPPORTED_ACTIONS
 from phoenixrpa.workflow.condition import ConditionEvaluator
 from phoenixrpa.workflow.models import Workflow, WorkflowStep
@@ -10,11 +12,7 @@ class WorkflowValidationError(ValueError):
 class WorkflowValidator:
 
     def validate(self, workflow: Workflow) -> None:
-        """Validate the complete workflow.
-
-        Raises:
-            WorkflowValidationError: If any workflow step is invalid.
-        """
+        """Validate the complete workflow."""
 
         if not workflow.steps:
             raise WorkflowValidationError(
@@ -32,13 +30,13 @@ class WorkflowValidator:
 
     def _validate_step(
         self,
-        step: WorkflowStep,
+        step,
         index,
     ) -> None:
 
         if not isinstance(step, WorkflowStep):
             raise WorkflowValidationError(
-                f"Step {index}: workflow step must be a WorkflowStep."
+                f"Step {index}: workflow step must be a WorkflowStep"
             )
 
         # --------------------------------------------------
@@ -326,3 +324,5 @@ class WorkflowValidator:
             raise WorkflowValidationError(
                 f"Step {index}: {error}"
             ) from error
+
+
