@@ -1415,3 +1415,38 @@ def test_validator_validates_multiple_nested_branch_siblings():
 
     WorkflowValidator().validate(workflow)
 
+
+def test_validator_accepts_empty_if_branches():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=[],
+                false_steps=[],
+            )
+        ]
+    )
+
+    WorkflowValidator().validate(workflow)
+
+
+def test_validator_accepts_one_empty_if_branch():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="click",
+                        selector="#submit",
+                    )
+                ],
+                false_steps=[],
+            )
+        ]
+    )
+
+    WorkflowValidator().validate(workflow)
+
