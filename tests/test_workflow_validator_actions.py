@@ -858,3 +858,26 @@ def test_validator_rejects_empty_required_values(
         match=rf"Step 1: {action} requires 'value'",
     ):
         WorkflowValidator().validate(workflow)
+
+@pytest.mark.parametrize(
+    "invalid_step",
+    [
+        None,
+        "invalid",
+        123,
+    ],
+)
+def test_validator_rejects_invalid_top_level_workflow_step(
+    invalid_step,
+):
+    workflow = Workflow(
+        steps=[
+            invalid_step,
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1: workflow step must be a WorkflowStep",
+    ):
+        WorkflowValidator().validate(workflow)
