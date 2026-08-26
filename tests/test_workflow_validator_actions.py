@@ -724,3 +724,24 @@ def test_validator_rejects_invalid_false_branch_step():
         match=r"Step 1\.false\.1: workflow step must be a WorkflowStep",
     ):
         WorkflowValidator().validate(workflow)
+
+@pytest.mark.parametrize(
+    "steps",
+    [
+        None,
+        "invalid",
+        123,
+    ],
+)
+def test_validator_rejects_non_list_workflow_steps(
+    steps,
+):
+    workflow = Workflow(
+        steps=steps,
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="Workflow steps must be a list",
+    ):
+        WorkflowValidator().validate(workflow)

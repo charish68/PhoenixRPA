@@ -14,6 +14,11 @@ class WorkflowValidator:
     def validate(self, workflow: Workflow) -> None:
         """Validate the complete workflow."""
 
+        if not isinstance(workflow.steps, list):
+            raise WorkflowValidationError(
+                "Workflow steps must be a list."
+            )
+
         if not workflow.steps:
             raise WorkflowValidationError(
                 "Workflow cannot be empty."
@@ -324,5 +329,6 @@ class WorkflowValidator:
             raise WorkflowValidationError(
                 f"Step {index}: {error}"
             ) from error
+
 
 
