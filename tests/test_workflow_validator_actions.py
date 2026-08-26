@@ -908,3 +908,47 @@ def test_validator_normalizes_action(
     WorkflowValidator().validate(workflow)
 
     assert workflow.steps[0].action == expected_action
+
+@pytest.mark.parametrize(
+    ("branch_name", "nested_action", "expected_action"),
+    [
+        ("true", " CLICK ", "click"),
+        ("false", " FILL ", "fill"),
+    ],
+)
+def test_validator_normalizes_nested_action(
+    branch_name,
+    nested_action,
+    expected_action,
+):
+    nested_step = WorkflowStep(
+        action=nested_action,
+        selector="#element",
+        value="value",
+    )
+
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=(
+                    [nested_step]
+                    if branch_name == "true"
+                    else []
+                ),
+                false_steps=(
+                    [nested_step]
+                    if branch_name == "false"
+                    else []
+                ),
+            )
+        ]
+    )
+
+    WorkflowValidator().validate(workflow)
+
+    if branch_name == "true":
+        assert workflow.steps[0].true_steps[0].action == expected_action
+    else:
+        assert workflow.steps[0].false_steps[0].action == expected_action
