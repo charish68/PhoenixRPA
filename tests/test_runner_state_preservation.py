@@ -337,3 +337,23 @@ async def test_runner_does_not_log_completion_after_failure(monkeypatch):
         await runner.run(workflow)
 
     success_log.assert_not_called()
+
+@pytest.mark.asyncio
+async def test_runner_completes_empty_workflow_without_dispatching():
+    browser = Mock()
+    db = Mock()
+
+    runner = WorkflowRunner(
+        browser=browser,
+        db=db,
+    )
+
+    workflow = Workflow(
+        steps=[]
+    )
+
+    runner.run_step = AsyncMock()
+
+    await runner.run(workflow)
+
+    runner.run_step.assert_not_called()
