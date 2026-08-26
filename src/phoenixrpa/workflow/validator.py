@@ -235,6 +235,17 @@ class WorkflowValidator:
                 index,
             )
 
+            # Branch steps must be lists.
+            if not isinstance(step.true_steps, list):
+                raise WorkflowValidationError(
+                    f"Step {index}: true_steps must be a list."
+                )
+
+            if not isinstance(step.false_steps, list):
+                raise WorkflowValidationError(
+                    f"Step {index}: false_steps must be a list."
+                )
+
             for child_index, child in enumerate(
                 step.true_steps,
                 start=1,
