@@ -43,3 +43,32 @@ def test_get_job_returns_job():
 
     finally:
         app.dependency_overrides.clear()
+
+import pytest
+
+
+@pytest.mark.parametrize(
+    "job_id",
+    [
+        0,
+        -1,
+        -100,
+    ],
+)
+def test_get_job_rejects_non_positive_id(job_id):
+    fake_db = MagicMock()
+
+    app.dependency_overrides.clear()
+    app.dependency_overrides[get_db] = lambda: fake_db
+
+    try:
+        client = TestClient(app)
+
+        response = client.get(
+            f"/jobs/{job_id}"
+        )
+
+        assert response.status_code == 422
+
+    finally:
+        app.dependency_overrides.clear()
