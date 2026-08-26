@@ -161,3 +161,48 @@ async def test_runner_stops_after_top_level_step_failure():
         await runner.run(workflow)
 
     assert dispatch.await_count == 1
+
+@pytest.mark.asyncio
+async def test_runner_executes_all_top_level_steps_in_order():
+    browser = Mock()
+    db = Mock()
+
+    runner = WorkflowRunner(
+        browser=browser,
+        db=db,
+    )
+
+    first_step = WorkflowStep(
+        action="click",
+        selector="#first",
+    )
+
+    second_step = WorkflowStep(
+        action="fill",
+        selector="#second",
+        value="hello",
+    )
+
+    workflow = Workflow(
+        steps=[
+            first_step,
+            second_step,
+        ]
+    )
+
+    executed_steps = []
+
+    async def dispatch(step, **kwargs):
+        executed_steps.append(step)
+
+    runner.dispatcher.dispatch = AsyncMock(
+        side_effect=dispatch
+    )
+
+    await runner.run(workflow)
+
+    assert executed_steps == [
+        first_step,
+        second_step,
+    ]
+    assert runner.dispatcher.dispatch.await_count == 2
