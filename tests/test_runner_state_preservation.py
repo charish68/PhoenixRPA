@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from phoenixrpa.workflow.models import WorkflowStep
+from phoenixrpa.workflow.models import Workflow, WorkflowStep
 from phoenixrpa.workflow.runner import WorkflowRunner
 
 
@@ -73,3 +73,50 @@ async def test_runner_restores_original_step_values_after_failure():
     assert step.selector == "{{selector}}"
     assert step.value == "{{value}}"
     assert step.path == "{{path}}"
+
+@pytest.mark.asyncio
+async def test_runner_restores_original_step_values_after_failure(monkeypatch):
+    from phoenixrpa.workflow.runner import WorkflowRunner
+
+    original_selector = "#username"
+    original_value = "{{username}}"
+
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="fill",
+                selector=original_selector,
+                value=original_value,
+            )
+        ]
+    )
+
+    browser = Mock()
+    db = Mock()
+    runner = WorkflowRunner(browser=browser, db=db, variables={"username": "charish"})
+
+    def fail_dispatch(*args, **kwargs):
+        raise RuntimeError("Dispatch failed")
+
+    monkeypatch.setattr(
+        runner.dispatcher,
+        "dispatch",
+        fail_dispatch,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Dispatch failed",
+    ):
+        await runner.run(workflow)
+
+    step = workflow.steps[0]
+
+    assert step.selector == original_selector
+    assert step.value == original_value
+
+
+
+
+
+
