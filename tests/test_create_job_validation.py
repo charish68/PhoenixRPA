@@ -117,3 +117,38 @@ def test_create_job_rejects_invalid_field_types(payload):
 
     finally:
         app.dependency_overrides.clear()
+
+import pytest
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "name": "A" * 10000,
+            "target_site": "https://example.com",
+        },
+        {
+            "name": "Valid Job",
+            "target_site": "https://example.com/" + ("a" * 10000),
+        },
+    ],
+)
+def test_create_job_rejects_excessively_long_fields(payload):
+    fake_db = MagicMock()
+
+    app.dependency_overrides.clear()
+    app.dependency_overrides[get_db] = lambda: fake_db
+
+    try:
+        client = TestClient(app)
+
+        response = client.post(
+            "/jobs/",
+            json=payload,
+        )
+
+        assert response.status_code == 422
+
+    finally:
+        app.dependency_overrides.clear()

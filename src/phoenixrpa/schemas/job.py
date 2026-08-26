@@ -1,7 +1,8 @@
 from datetime import datetime
 from enum import Enum
+from typing import Annotated
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, StringConstraints
 
 
 class JobStatus(str, Enum):
@@ -11,22 +12,28 @@ class JobStatus(str, Enum):
     FAILED = "FAILED"
 
 
+NonEmptyJobName = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=255,
+    ),
+]
+
+NonEmptyTargetSite = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=2048,
+    ),
+]
+
+
 class JobCreate(BaseModel):
-    name: str
-    target_site: str
-
-    @field_validator("name", "target_site")
-    @classmethod
-    def validate_required_text(
-        cls,
-        value: str,
-    ) -> str:
-        if not value.strip():
-            raise ValueError(
-                "Field cannot be empty."
-            )
-
-        return value.strip()
+    name: NonEmptyJobName
+    target_site: NonEmptyTargetSite
 
 
 class JobResponse(BaseModel):
