@@ -671,3 +671,19 @@ def test_validator_rejects_non_string_condition():
         match=r"Step 1: condition must be a string",
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_rejects_non_string_selector():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="click",
+                selector=123,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1: selector must be a string",
+    ):
+        WorkflowValidator().validate(workflow)

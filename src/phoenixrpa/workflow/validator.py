@@ -198,7 +198,18 @@ class WorkflowValidator:
 
         elif action == "screenshot":
 
-            if not step.path:
+            if step.path is None:
+                raise WorkflowValidationError(
+                    f"Step {index}: screenshot requires "
+                    f"'path'."
+                )
+
+            if not isinstance(step.path, str):
+                raise WorkflowValidationError(
+                    f"Step {index}: path must be a string."
+                )
+
+            if not step.path.strip():
                 raise WorkflowValidationError(
                     f"Step {index}: screenshot requires "
                     f"'path'."
@@ -253,11 +264,18 @@ class WorkflowValidator:
         action: str,
     ) -> None:
 
-        if (
-            step.selector is None
-            or not isinstance(step.selector, str)
-            or not step.selector.strip()
-        ):
+        if step.selector is None:
+            raise WorkflowValidationError(
+                f"Step {index}: {action} requires "
+                f"'selector'."
+            )
+
+        if not isinstance(step.selector, str):
+            raise WorkflowValidationError(
+                f"Step {index}: selector must be a string."
+            )
+
+        if not step.selector.strip():
             raise WorkflowValidationError(
                 f"Step {index}: {action} requires "
                 f"'selector'."
