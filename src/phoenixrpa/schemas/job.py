@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class JobStatus(str, Enum):
@@ -14,6 +14,19 @@ class JobStatus(str, Enum):
 class JobCreate(BaseModel):
     name: str
     target_site: str
+
+    @field_validator("name", "target_site")
+    @classmethod
+    def validate_required_text(
+        cls,
+        value: str,
+    ) -> str:
+        if not value.strip():
+            raise ValueError(
+                "Field cannot be empty."
+            )
+
+        return value.strip()
 
 
 class JobResponse(BaseModel):
