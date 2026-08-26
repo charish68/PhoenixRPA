@@ -1236,3 +1236,60 @@ def test_validator_accepts_valid_nested_false_step_timeout_and_retries():
 
     WorkflowValidator().validate(workflow)
 
+
+def test_validator_accepts_minimum_valid_timeout_and_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="click",
+                selector="#submit",
+                timeout=1,
+                retries=0,
+            )
+        ]
+    )
+
+    WorkflowValidator().validate(workflow)
+
+
+def test_validator_accepts_valid_nested_true_step_timeout_and_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="click",
+                        selector="#submit",
+                        timeout=1,
+                        retries=0,
+                    )
+                ],
+            )
+        ]
+    )
+
+    WorkflowValidator().validate(workflow)
+
+
+def test_validator_accepts_valid_nested_false_step_timeout_and_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                false_steps=[
+                    WorkflowStep(
+                        action="click",
+                        selector="#submit",
+                        timeout=5,
+                        retries=3,
+                    )
+                ],
+            )
+        ]
+    )
+
+    WorkflowValidator().validate(workflow)
+
