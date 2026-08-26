@@ -655,3 +655,19 @@ def test_validator_reports_nested_whitespace_only_condition():
         ),
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_rejects_non_string_condition():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition=123,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1: condition must be a string",
+    ):
+        WorkflowValidator().validate(workflow)

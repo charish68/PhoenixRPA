@@ -1,6 +1,3 @@
-
-from math import isfinite
-
 from phoenixrpa.workflow.actions import SUPPORTED_ACTIONS
 from phoenixrpa.workflow.condition import ConditionEvaluator
 from phoenixrpa.workflow.models import Workflow, WorkflowStep
@@ -209,10 +206,14 @@ class WorkflowValidator:
 
         elif action == "if":
 
-            if (
-                step.condition is None
-                or not step.condition.strip()
-            ):
+            # Condition must be a string.
+            if not isinstance(step.condition, str):
+                raise WorkflowValidationError(
+                    f"Step {index}: condition must be a string."
+                )
+
+            # Empty or whitespace-only conditions are invalid.
+            if not step.condition.strip():
                 raise WorkflowValidationError(
                     f"Step {index}: if requires "
                     f"'condition'."
@@ -254,6 +255,7 @@ class WorkflowValidator:
 
         if (
             step.selector is None
+            or not isinstance(step.selector, str)
             or not step.selector.strip()
         ):
             raise WorkflowValidationError(
@@ -288,19 +290,3 @@ class WorkflowValidator:
             raise WorkflowValidationError(
                 f"Step {index}: {error}"
             ) from error
-
-
-# ----------------------------------------------------------
-# Unit Tests
-# ----------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
