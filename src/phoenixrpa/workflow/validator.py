@@ -36,6 +36,11 @@ class WorkflowValidator:
         index,
     ) -> None:
 
+        if not isinstance(step, WorkflowStep):
+            raise WorkflowValidationError(
+                f"Step {index}: workflow step must be a WorkflowStep."
+            )
+
         # --------------------------------------------------
         # Action
         # --------------------------------------------------
@@ -217,13 +222,11 @@ class WorkflowValidator:
 
         elif action == "if":
 
-            # Condition must be a string.
             if not isinstance(step.condition, str):
                 raise WorkflowValidationError(
                     f"Step {index}: condition must be a string."
                 )
 
-            # Empty or whitespace-only conditions are invalid.
             if not step.condition.strip():
                 raise WorkflowValidationError(
                     f"Step {index}: if requires "
@@ -235,7 +238,6 @@ class WorkflowValidator:
                 index,
             )
 
-            # Branch steps must be lists.
             if not isinstance(step.true_steps, list):
                 raise WorkflowValidationError(
                     f"Step {index}: true_steps must be a list."

@@ -687,3 +687,40 @@ def test_validator_rejects_non_string_selector():
         match=r"Step 1: selector must be a string",
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_rejects_invalid_true_branch_step():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=["invalid"],
+                false_steps=[],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1\.true\.1: workflow step must be a WorkflowStep",
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+def test_validator_rejects_invalid_false_branch_step():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=[],
+                false_steps=["invalid"],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1\.false\.1: workflow step must be a WorkflowStep",
+    ):
+        WorkflowValidator().validate(workflow)
