@@ -535,3 +535,56 @@ def test_validator_reports_nested_child_invalid_retries():
         ),
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_reports_nested_child_boolean_timeout():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="click",
+                        selector="#login",
+                        timeout=True,
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=(
+            r"Step 1\.true\.1: "
+            r"timeout must be an integer"
+        ),
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+def test_validator_reports_nested_child_boolean_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status == success",
+                false_steps=[
+                    WorkflowStep(
+                        action="click",
+                        selector="#login",
+                        retries=False,
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=(
+            r"Step 1\.false\.1: "
+            r"retries must be an integer"
+        ),
+    ):
+        WorkflowValidator().validate(workflow)
