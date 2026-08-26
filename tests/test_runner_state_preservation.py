@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 
@@ -249,3 +249,50 @@ async def test_runner_stops_after_top_level_step_failure():
         await runner.run(workflow)
 
     assert runner.dispatcher.dispatch.await_count == 1
+
+@pytest.mark.asyncio
+async def test_runner_enables_execution_logging_for_top_level_steps():
+    browser = Mock()
+    db = Mock()
+
+    runner = WorkflowRunner(
+        browser=browser,
+        db=db,
+    )
+
+    first_step = WorkflowStep(
+        action="click",
+        selector="#first",
+    )
+
+    second_step = WorkflowStep(
+        action="click",
+        selector="#second",
+    )
+
+    workflow = Workflow(
+        steps=[
+            first_step,
+            second_step,
+        ]
+    )
+
+    runner.run_step = AsyncMock()
+
+    await runner.run(workflow)
+
+    assert runner.run_step.await_count == 2
+
+    runner.run_step.assert_has_awaits(
+        [
+            call(
+                first_step,
+                log_execution=True,
+            ),
+            call(
+                second_step,
+                log_execution=True,
+            ),
+        ]
+    )
+
