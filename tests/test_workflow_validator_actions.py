@@ -613,3 +613,45 @@ def test_validator_reports_nested_invalid_condition_path():
         ),
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_rejects_whitespace_only_condition():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="   ",
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1: if requires 'condition'",
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+def test_validator_reports_nested_whitespace_only_condition():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="if",
+                        condition="   ",
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=(
+            r"Step 1\.true\.1: "
+            r"if requires 'condition'"
+        ),
+    ):
+        WorkflowValidator().validate(workflow)
