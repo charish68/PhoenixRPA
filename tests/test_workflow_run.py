@@ -77,3 +77,38 @@ async def test_runner_stops_workflow_after_step_failure():
         step1,
         log_execution=True,
     )
+
+@pytest.mark.asyncio
+async def test_runner_enables_execution_logging_for_all_workflow_steps():
+    runner = WorkflowRunner(
+        browser=MagicMock(),
+        db=MagicMock(),
+    )
+
+    runner.run_step = AsyncMock()
+
+    steps = [
+        WorkflowStep(
+            action="click",
+            selector="#first",
+            step_order=1,
+        ),
+        WorkflowStep(
+            action="click",
+            selector="#second",
+            step_order=2,
+        ),
+    ]
+
+    workflow = MagicMock()
+    workflow.steps = steps
+
+    await runner.run(workflow)
+
+    assert runner.run_step.await_count == 2
+
+    for index, step in enumerate(steps):
+        call = runner.run_step.await_args_list[index]
+
+        assert call.args[0] is step
+        assert call.kwargs["log_execution"] is True
