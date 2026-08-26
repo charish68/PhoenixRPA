@@ -952,3 +952,59 @@ def test_validator_normalizes_nested_action(
         assert workflow.steps[0].true_steps[0].action == expected_action
     else:
         assert workflow.steps[0].false_steps[0].action == expected_action
+
+@pytest.mark.parametrize(
+    ("branch_name", "nested_action"),
+    [
+        ("true", "fill"),
+        ("false", "press"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        "",
+        "   ",
+    ],
+)
+def test_validator_rejects_empty_nested_values(
+    branch_name,
+    nested_action,
+    value,
+):
+    nested_step = WorkflowStep(
+        action=nested_action,
+        selector="#element",
+        value=value,
+    )
+
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=(
+                    [nested_step]
+                    if branch_name == "true"
+                    else []
+                ),
+                false_steps=(
+                    [nested_step]
+                    if branch_name == "false"
+                    else []
+                ),
+            )
+        ]
+    )
+
+    expected_path = (
+        "1.true.1"
+        if branch_name == "true"
+        else "1.false.1"
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=rf"Step {expected_path}: {nested_action} requires 'value'",
+    ):
+        WorkflowValidator().validate(workflow)
