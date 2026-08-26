@@ -819,3 +819,42 @@ def test_validator_rejects_non_list_false_steps(
         match=r"Step 1: false_steps must be a list",
     ):
         WorkflowValidator().validate(workflow)
+
+@pytest.mark.parametrize(
+    ("action", "selector"),
+    [
+        ("goto", None),
+        ("fill", "#username"),
+        ("press", "body"),
+        ("wait_url", None),
+        ("wait_text", None),
+        ("extract_attribute", "#element"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        "",
+        "   ",
+    ],
+)
+def test_validator_rejects_empty_required_values(
+    action,
+    selector,
+    value,
+):
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action=action,
+                selector=selector,
+                value=value,
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=rf"Step 1: {action} requires 'value'",
+    ):
+        WorkflowValidator().validate(workflow)

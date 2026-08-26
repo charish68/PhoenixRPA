@@ -320,6 +320,12 @@ class WorkflowValidator:
                 f"Step {index}: value must be a string."
             )
 
+        if not step.value.strip():
+            raise WorkflowValidationError(
+                f"Step {index}: {action} requires "
+                f"'value'."
+            )
+
     def _validate_condition(
         self,
         step: WorkflowStep,
@@ -334,6 +340,7 @@ class WorkflowValidator:
             raise WorkflowValidationError(
                 f"Step {index}: {error}"
             ) from error
+
 
 
 
