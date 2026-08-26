@@ -482,3 +482,56 @@ def test_validator_reports_deep_nested_branch_path():
         ),
     ):
         WorkflowValidator().validate(workflow)
+
+def test_validator_reports_nested_child_invalid_timeout():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="click",
+                        selector="#login",
+                        timeout=1500.5,
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=(
+            r"Step 1\.true\.1: "
+            r"timeout must be an integer"
+        ),
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+def test_validator_reports_nested_child_invalid_retries():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status == success",
+                false_steps=[
+                    WorkflowStep(
+                        action="click",
+                        selector="#login",
+                        retries=-1,
+                    )
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=(
+            r"Step 1\.false\.1: "
+            r"retries cannot be negative"
+        ),
+    ):
+        WorkflowValidator().validate(workflow)
