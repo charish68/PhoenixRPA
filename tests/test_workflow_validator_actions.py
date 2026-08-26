@@ -1350,3 +1350,68 @@ def test_validator_reports_deep_nested_unsupported_action_path():
     ):
         WorkflowValidator().validate(workflow)
 
+
+def test_validator_reports_nested_sibling_validation_path():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="click",
+                        selector="#first",
+                    ),
+                    WorkflowStep(
+                        action="click",
+                        selector="#second",
+                    ),
+                    WorkflowStep(
+                        action="click",
+                        selector="   ",
+                    ),
+                ],
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match=r"Step 1\.true\.3: click requires 'selector'",
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+def test_validator_validates_multiple_nested_branch_siblings():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="success == success",
+                true_steps=[
+                    WorkflowStep(
+                        action="click",
+                        selector="#first",
+                    ),
+                    WorkflowStep(
+                        action="fill",
+                        selector="#username",
+                        value="charish",
+                    ),
+                ],
+                false_steps=[
+                    WorkflowStep(
+                        action="wait_text",
+                        value="Login failed",
+                    ),
+                    WorkflowStep(
+                        action="screenshot",
+                        path="failure.png",
+                    ),
+                ],
+            )
+        ]
+    )
+
+    WorkflowValidator().validate(workflow)
+
