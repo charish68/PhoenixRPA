@@ -881,3 +881,30 @@ def test_validator_rejects_invalid_top_level_workflow_step(
         match=r"Step 1: workflow step must be a WorkflowStep",
     ):
         WorkflowValidator().validate(workflow)
+
+@pytest.mark.parametrize(
+    ("input_action", "expected_action"),
+    [
+        ("CLICK", "click"),
+        (" Click ", "click"),
+        ("  FILL  ", "fill"),
+        ("GoTo", "goto"),
+    ],
+)
+def test_validator_normalizes_action(
+    input_action,
+    expected_action,
+):
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action=input_action,
+                selector="#element",
+                value="value",
+            )
+        ]
+    )
+
+    WorkflowValidator().validate(workflow)
+
+    assert workflow.steps[0].action == expected_action
