@@ -376,3 +376,36 @@ def test_validator_rejects_fractional_timeout():
     ):
         WorkflowValidator().validate(workflow)
 
+
+def test_validator_rejects_repeated_condition_operators():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status == success == pending",
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="Condition must contain exactly one operator",
+    ):
+        WorkflowValidator().validate(workflow)
+
+
+def test_validator_rejects_repeated_not_equal_operators():
+    workflow = Workflow(
+        steps=[
+            WorkflowStep(
+                action="if",
+                condition="status != success != pending",
+            )
+        ]
+    )
+
+    with pytest.raises(
+        WorkflowValidationError,
+        match="Condition must contain exactly one operator",
+    ):
+        WorkflowValidator().validate(workflow)
