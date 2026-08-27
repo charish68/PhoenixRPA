@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
 
 from phoenixrpa.db.dependency import get_db
@@ -33,7 +33,7 @@ def list_jobs(
 
 @router.get("/{job_id}")
 def get_job(
-    job_id: int,
+    job_id: int = Path(gt=0),
     db: Session = Depends(get_db),
 ):
     job = JobService(db).get_job(job_id)
@@ -49,7 +49,7 @@ def get_job(
 
 @router.delete("/{job_id}")
 def delete_job(
-    job_id: int,
+    job_id: int = Path(gt=0),
     db: Session = Depends(get_db),
 ):
     deleted = JobService(db).delete_job(job_id)

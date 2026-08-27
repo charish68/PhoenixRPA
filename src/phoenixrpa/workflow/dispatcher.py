@@ -6,6 +6,7 @@ from phoenixrpa.services.workflow_service import WorkflowService
 from phoenixrpa.workflow.condition import ConditionEvaluator
 from phoenixrpa.workflow.models import WorkflowStep
 from phoenixrpa.workflow.variables import VariableResolver
+from phoenixrpa.workflow.actions import SUPPORTED_ACTIONS
 
 
 class WorkflowDispatcher:
@@ -103,7 +104,12 @@ class WorkflowDispatcher:
         execute_child=None,
         branch_path: str | None = None,
     ):
-        action = step.action.lower()
+        action = step.action.strip().lower()
+
+        if action not in SUPPORTED_ACTIONS:
+            raise ValueError(
+                f"Unsupported workflow action: {step.action}"
+            )
 
         if action == "goto":
             if not step.value:
@@ -226,7 +232,7 @@ class WorkflowDispatcher:
                     "wait_text requires 'value'"
                 )
 
-            resolved_value = self.variables.resolve(
+            resolved_value = self._resolve_value(
                 step.value
             )
 
@@ -243,7 +249,7 @@ class WorkflowDispatcher:
                     "wait_url requires 'value'"
                 )
 
-            resolved_value = self.variables.resolve(
+            resolved_value = self._resolve_value(
                 step.value
             )
 
@@ -409,7 +415,7 @@ class WorkflowDispatcher:
                 )
 
             original_selector = step.selector
-            resolved_selector = self.variables.resolve(
+            resolved_selector = self._resolve_value(
                 original_selector
             )
 
@@ -488,16 +494,21 @@ class WorkflowDispatcher:
 
             return None
         elif action == "if":
-            if step.condition is None:
+            if not step.condition or not step.condition.strip():
                 raise ValueError(
                     "if action requires 'condition'"
                 )
 
-            left, op, right = step.condition.split()
+            left, op, right = (
+                self.condition_evaluator.parse(
+                    step.condition
+                )
+            )
 
-            left = self.variables.resolve(left)
+            left = left.strip("'").strip('"')
+            left = self._resolve_value(left)
             right = right.strip("'").strip('"')
-            right = self.variables.resolve(right)
+            right = self._resolve_value(right)
 
             if self.condition_evaluator.evaluate(
                 left,
@@ -555,6 +566,22 @@ class WorkflowDispatcher:
             raise ValueError(
                 f"Unsupported workflow action: {step.action}"
             )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

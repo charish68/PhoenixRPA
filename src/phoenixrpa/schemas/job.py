@@ -1,7 +1,8 @@
 from datetime import datetime
 from enum import Enum
+from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import BaseModel, StringConstraints
 
 
 class JobStatus(str, Enum):
@@ -11,9 +12,28 @@ class JobStatus(str, Enum):
     FAILED = "FAILED"
 
 
+NonEmptyJobName = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=255,
+    ),
+]
+
+NonEmptyTargetSite = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=2048,
+    ),
+]
+
+
 class JobCreate(BaseModel):
-    name: str
-    target_site: str
+    name: NonEmptyJobName
+    target_site: NonEmptyTargetSite
 
 
 class JobResponse(BaseModel):

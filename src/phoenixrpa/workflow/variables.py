@@ -8,6 +8,14 @@ class VariableResolver:
         r"^\{\{(TODAY|YESTERDAY|TOMORROW)([+-]\d+)?\}\}$"
     )
 
+    _VARIABLE_PATTERN = re.compile(
+        r"^\{\{([^{}]+)\}\}$"
+    )
+
+    _EMBEDDED_VARIABLE_PATTERN = re.compile(
+        r"\{\{([^{}]+)\}\}"
+    )
+
     def __init__(self, variables=None):
         self.variables = variables or {}
 
@@ -15,15 +23,22 @@ class VariableResolver:
         if not isinstance(value, str):
             return value
 
-        # Existing workflow variables
-        if value.startswith("{{") and value.endswith("}}"):
-            variable_name = value[2:-2].strip()
+        # Preserve the original object when the entire value
+        # is exactly one workflow variable.
+        variable_match = self._VARIABLE_PATTERN.fullmatch(
+            value.strip()
+        )
+
+        if variable_match:
+            variable_name = variable_match.group(1).strip()
 
             if variable_name in self.variables:
                 return self.variables[variable_name]
 
         # Dynamic date expressions
-        match = self._DATE_PATTERN.match(value.strip())
+        match = self._DATE_PATTERN.fullmatch(
+            value.strip()
+        )
 
         if match:
             keyword = match.group(1)
@@ -39,12 +54,27 @@ class VariableResolver:
                 resolved_date = today + timedelta(days=1)
 
             if offset_text:
-                offset = int(offset_text)
-                resolved_date += timedelta(days=offset)
+                resolved_date += timedelta(
+                    days=int(offset_text)
+                )
 
             return resolved_date.isoformat()
 
-        return value
+        # Replace variables embedded inside text.
+        def replace_variable(match):
+            variable_name = match.group(1).strip()
+
+            if variable_name in self.variables:
+                return str(
+                    self.variables[variable_name]
+                )
+
+            return match.group(0)
+
+        return self._EMBEDDED_VARIABLE_PATTERN.sub(
+            replace_variable,
+            value,
+        )
 
     def set(
         self,

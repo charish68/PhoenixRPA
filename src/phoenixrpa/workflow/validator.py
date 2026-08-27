@@ -1,20 +1,8 @@
+from math import isfinite
+
+from phoenixrpa.workflow.actions import SUPPORTED_ACTIONS
+from phoenixrpa.workflow.condition import ConditionEvaluator
 from phoenixrpa.workflow.models import Workflow, WorkflowStep
-
-
-SUPPORTED_ACTIONS = {
-    "goto",
-    "click",
-    "fill",
-    "press",
-    "hover",
-    "wait_element",
-    "wait_url",
-    "extract_text",
-    "extract_html",
-    "extract_attribute",
-    "screenshot",
-    "if",
-}
 
 
 class WorkflowValidationError(ValueError):
@@ -24,13 +12,17 @@ class WorkflowValidationError(ValueError):
 class WorkflowValidator:
 
     def validate(self, workflow: Workflow) -> None:
-        """
-        Validate the complete workflow.
+        """Validate the complete workflow."""
 
-        Raises:
-            WorkflowValidationError:
-                If any workflow step is invalid.
-        """
+        if not isinstance(workflow, Workflow):
+            raise WorkflowValidationError(
+                "Workflow must be a Workflow."
+            )
+
+        if not isinstance(workflow.steps, list):
+            raise WorkflowValidationError(
+                "Workflow steps must be a list."
+            )
 
         if not workflow.steps:
             raise WorkflowValidationError(
@@ -48,20 +40,31 @@ class WorkflowValidator:
 
     def _validate_step(
         self,
-        step: WorkflowStep,
-        index: int,
+        step,
+        index,
     ) -> None:
+
+        if not isinstance(step, WorkflowStep):
+            raise WorkflowValidationError(
+                f"Step {index}: workflow step must be a WorkflowStep"
+            )
 
         # --------------------------------------------------
         # Action
         # --------------------------------------------------
 
-        if not step.action:
+        if not isinstance(step.action, str):
+            raise WorkflowValidationError(
+                f"Step {index}: action must be a string."
+            )
+
+        if not step.action.strip():
             raise WorkflowValidationError(
                 f"Step {index}: action is required."
             )
 
         action = step.action.strip().lower()
+        step.action = action
 
         if action not in SUPPORTED_ACTIONS:
             raise WorkflowValidationError(
@@ -73,6 +76,14 @@ class WorkflowValidator:
         # Timeout
         # --------------------------------------------------
 
+        if (
+            isinstance(step.timeout, bool)
+            or not isinstance(step.timeout, int)
+        ):
+            raise WorkflowValidationError(
+                f"Step {index}: timeout must be an integer."
+            )
+
         if step.timeout <= 0:
             raise WorkflowValidationError(
                 f"Step {index}: timeout must be greater "
@@ -82,6 +93,14 @@ class WorkflowValidator:
         # --------------------------------------------------
         # Retries
         # --------------------------------------------------
+
+        if (
+            isinstance(step.retries, bool)
+            or not isinstance(step.retries, int)
+        ):
+            raise WorkflowValidationError(
+                f"Step {index}: retries must be an integer."
+            )
 
         if step.retries < 0:
             raise WorkflowValidationError(
@@ -160,6 +179,14 @@ class WorkflowValidator:
                 "wait_url",
             )
 
+        elif action == "wait_text":
+
+            self._require_value(
+                step,
+                index,
+                "wait_text",
+            )
+
         elif action == "extract_text":
 
             self._require_selector(
@@ -184,7 +211,18 @@ class WorkflowValidator:
 
         elif action == "screenshot":
 
-            if not step.path:
+            if step.path is None:
+                raise WorkflowValidationError(
+                    f"Step {index}: screenshot requires "
+                    f"'path'."
+                )
+
+            if not isinstance(step.path, str):
+                raise WorkflowValidationError(
+                    f"Step {index}: path must be a string."
+                )
+
+            if not step.path.strip():
                 raise WorkflowValidationError(
                     f"Step {index}: screenshot requires "
                     f"'path'."
@@ -192,7 +230,12 @@ class WorkflowValidator:
 
         elif action == "if":
 
-            if not step.condition:
+            if not isinstance(step.condition, str):
+                raise WorkflowValidationError(
+                    f"Step {index}: condition must be a string."
+                )
+
+            if not step.condition.strip():
                 raise WorkflowValidationError(
                     f"Step {index}: if requires "
                     f"'condition'."
@@ -202,6 +245,16 @@ class WorkflowValidator:
                 step,
                 index,
             )
+
+            if not isinstance(step.true_steps, list):
+                raise WorkflowValidationError(
+                    f"Step {index}: true_steps must be a list."
+                )
+
+            if not isinstance(step.false_steps, list):
+                raise WorkflowValidationError(
+                    f"Step {index}: false_steps must be a list."
+                )
 
             for child_index, child in enumerate(
                 step.true_steps,
@@ -232,10 +285,18 @@ class WorkflowValidator:
         action: str,
     ) -> None:
 
-        if (
-            step.selector is None
-            or not step.selector.strip()
-        ):
+        if step.selector is None:
+            raise WorkflowValidationError(
+                f"Step {index}: {action} requires "
+                f"'selector'."
+            )
+
+        if not isinstance(step.selector, str):
+            raise WorkflowValidationError(
+                f"Step {index}: selector must be a string."
+            )
+
+        if not step.selector.strip():
             raise WorkflowValidationError(
                 f"Step {index}: {action} requires "
                 f"'selector'."
@@ -254,16 +315,33 @@ class WorkflowValidator:
                 f"'value'."
             )
 
+        if not isinstance(step.value, str):
+            raise WorkflowValidationError(
+                f"Step {index}: value must be a string."
+            )
+
+        if not step.value.strip():
+            raise WorkflowValidationError(
+                f"Step {index}: {action} requires "
+                f"'value'."
+            )
+
     def _validate_condition(
         self,
         step: WorkflowStep,
         index,
     ) -> None:
 
-        parts = step.condition.split()
-
-        if len(parts) != 3:
-            raise WorkflowValidationError(
-                f"Step {index}: condition must contain "
-                f"three parts: left operator right."
+        try:
+            ConditionEvaluator().parse(
+                step.condition
             )
+        except ValueError as error:
+            raise WorkflowValidationError(
+                f"Step {index}: {error}"
+            ) from error
+
+
+
+
+

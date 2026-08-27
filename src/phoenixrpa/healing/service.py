@@ -212,6 +212,16 @@ class HealingService:
                     "placeholder"
                 )
 
+                # Skip hidden elements
+                try:
+                    is_visible = await element.is_visible()
+
+                    if is_visible is False:
+                        continue
+
+                except Exception:
+                    pass
+
                 # ------------------------------------------------
                 # Build stable selector
                 # ------------------------------------------------
@@ -377,11 +387,11 @@ class HealingService:
             )
 
             result = HealingResult(
-            status="HEALED",
-            original_selector=failed_selector,
-            healed_selector=best_selector,
-            method="DETERMINISTIC",
-                        confidence=confidence,
+                status="HEALED",
+                original_selector=failed_selector,
+                healed_selector=best_selector,
+                method="DETERMINISTIC",
+                confidence=confidence,
             )
 
             return result if return_result else best_selector
@@ -410,7 +420,6 @@ class HealingService:
                 confidence=1.0,
             )
 
-
             return result if return_result else ai_selector
         # --------------------------------------------------------
         # 6. Nothing found
@@ -433,4 +442,5 @@ class HealingService:
             )
 
         return None
+
 
