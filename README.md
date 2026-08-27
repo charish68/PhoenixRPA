@@ -63,3 +63,101 @@ Retry Action
       |
       v
 Store Healing Metadata
+
+## Architecture
+
+PhoenixRPA is organized around the following workflow:
+
+Browser Recording Extension
+            |
+            v
+      FastAPI Backend
+            |
+            v
+      Job / Workflow API
+            |
+            v
+      Workflow Validation
+            |
+            v
+      Workflow Runner
+            |
+            v
+      Workflow Dispatcher
+            |
+            v
+    Playwright Browser
+            |
+            v
+PostgreSQL + Execution Logs
+
+## Workflow Execution
+
+PhoenixRPA supports:
+
+- Sequential workflow execution
+- Conditional IF / ELSE branches
+- Nested workflow steps
+- Variable resolution
+- Retry handling
+- Execution logging
+- Failure screenshots
+- State preservation after successful and failed execution
+
+## Reliability and Validation
+
+Recent improvements include:
+
+- Validation of workflow actions
+- Validation of nested workflow structures
+- Validation of conditions and condition operators
+- Workflow runner state preservation tests
+- Top-level step execution order tests
+- Step failure handling tests
+- Logging behavior tests
+- Empty workflow handling tests
+- Validation for empty and whitespace-only job fields
+- Maximum job field length validation
+- Invalid job field type validation
+- Positive job ID validation
+
+## Technology Stack
+
+- Python
+- FastAPI
+- PostgreSQL
+- SQLAlchemy
+- Alembic
+- Playwright
+- Pydantic
+- Groq API
+- Pytest
+
+## Testing
+
+Run the automated test suite:
+
+```bash
+uv run python -m pytest -q --ignore=tests/test_groq_ai_healing_integration.py
+
+```
+
+The external Groq integration test is excluded because it depends on an external AI service.
+
+## Project Goals
+
+PhoenixRPA focuses on building reliable browser automation with:
+
+- Workflow-based automation
+- Self-healing selectors
+- AI-assisted recovery
+- Execution monitoring
+- Failure diagnostics
+- Workflow validation
+- Automated testing
+
+## Author
+
+**Nagalla Venkata Charish Yadav**
+
+AI / Automation Developer
